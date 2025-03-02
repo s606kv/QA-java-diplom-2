@@ -15,10 +15,10 @@ import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(Parameterized.class)
-public class CreateUserRequiredFieldsParameterizedTest {
+public class UserCreateRequiredFieldsParameterizedTest {
 
     private static Faker faker = new Faker();
-    private UserAPI userAPI = new UserAPI();;
+    private UserAPI userAPI = new UserAPI();
     private User user;
 
     private final String email;
@@ -28,7 +28,7 @@ public class CreateUserRequiredFieldsParameterizedTest {
 
 
 
-    public CreateUserRequiredFieldsParameterizedTest (String email, String password, String name, String testName) {
+    public UserCreateRequiredFieldsParameterizedTest(String email, String password, String name, String testName) {
         this.email=email;
         this.password=password;
         this.name=name;

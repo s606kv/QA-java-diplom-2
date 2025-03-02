@@ -8,17 +8,18 @@ import service.User;
 import static io.restassured.RestAssured.authentication;
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
 import static service.ServiceLinks.*;
 import static io.restassured.RestAssured.given;
-import static org.junit.Assert.assertEquals;
 
 public class UserAPI {
 
-    @Step ("Получение ответа на POST запрос создания пользователя. Ручка /api/auth/register")
+    @Step ("Получение ответа на POST запрос создания пользователя. Ручка /api/auth/register.")
     public Response postForUserCreating (User user) {
-        System.out.println("-> Создаётся новый пользователь...");
+        System.out.println("-> Создаётся пользователь...");
 
         Response response = given()
+                .contentType(ContentType.JSON)
                 .body(user)
                 .when()
                 .post(CREATE_USER);
@@ -26,30 +27,39 @@ public class UserAPI {
         // вывод сообщения в зависимости от исхода запроса
         String responseBody = response.then().extract().body().asString();
         int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_CREATED)
-                ? String.format("Статус-код: %d. Создан новый пользователь.%n", statusCode)
+        String info = (statusCode == SC_OK)
+                ? String.format("Статус-код: %d. Создан пользователь.%n", statusCode)
                 : String.format("⚠\uFE0F ВНИМАНИЕ. Тело ответа: %s.%nПользователь не создан. Проверьте тело запроса.%n", responseBody);
         System.out.println(info);
 
         return response;
     }
 
-    @Step ("Получение accessToken после создания пользователя")
+    @Step ("Получение accessToken после создания пользователя.")
     public String accessToken (Response response) {
         String untrimmedAccessToken = response.then().extract().body().path("accessToken").toString();
-        String cleanAccessToken = untrimmedAccessToken.substring(8, untrimmedAccessToken.length()+1);
+        String cleanAccessToken = untrimmedAccessToken.substring(7);
 
-        System.out.println("Получен accessToken:%n" + cleanAccessToken);
+        // вывод сообщения в зависимости от исхода запроса
+        if(!untrimmedAccessToken.isEmpty()) {
+            System.out.println(String.format("Получен accessToken:%n%s%n", cleanAccessToken));
+        } else {
+            System.out.println("⚠\uFE0F ВНИМАНИЕ. accessToken не получен.");
+        }
+
+        // проверка наличия токена
+        assertNotNull(untrimmedAccessToken);
 
         return cleanAccessToken;
     }
 
-    @Step ("Получение ответа на POST запрос удаления пользователя. Ручка /api/auth/user")
+    @Step ("Получение ответа на POST запрос удаления пользователя. Ручка /api/auth/user.")
     public void deleteUser (User user, String accessToken) {
         System.out.println("-> Удаляется пользователь...");
 
         Response response = given()
-                .header("Authorization", accessToken)
+                .contentType(ContentType.JSON)
+                .auth().oauth2(accessToken)
                 .body(user)
                 .when()
                 .delete(DELETE_USER);
@@ -57,7 +67,7 @@ public class UserAPI {
         // вывод сообщения в зависимости от исхода запроса
         String responseBody = response.then().extract().body().asString();
         int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_OK)
+        String info = (statusCode == SC_ACCEPTED)
                 ? String.format("Статус-код: %d. Пользователь удалён.%n", statusCode)
                 : String.format("⚠\uFE0F ВНИМАНИЕ. Тело ответа: %s.%nПользователь не удалён. Проверьте тело запроса.%n", responseBody);
         System.out.println(info);
