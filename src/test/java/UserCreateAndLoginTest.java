@@ -10,8 +10,7 @@ import org.junit.Test;
 import service.ServiceLinks;
 import service.User;
 
-import static org.apache.http.HttpStatus.SC_FORBIDDEN;
-import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
@@ -19,6 +18,7 @@ public class UserCreateAndLoginTest {
     private User user;
     private UserAPI userAPI;
     private String accessToken;
+    private String refreshToken;
     private Response response;
 
     // сгенерированы данные
@@ -38,6 +38,8 @@ public class UserCreateAndLoginTest {
         response = userAPI.postForUserCreating(user);
         // получили accessToken
         accessToken = userAPI.getAccessToken(response);
+        // получили refreshToken
+        refreshToken = userAPI.getRefreshToken(response);
     }
 
     @Test
@@ -46,18 +48,16 @@ public class UserCreateAndLoginTest {
     public void userCreatePositiveTest () {
 
         // проверили статус и тело
-        response.then().assertThat()
+        response.then()
+                .assertThat()
                 .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true))
-                .and()
-                .body("user.email", equalTo(emailAddress))
-                .and()
-                .body("user.name", equalTo(username))
-                .and()
-                .body("accessToken", notNullValue())
-                .and()
-                .body("refreshToken", notNullValue());
+                .body(
+                        "success", equalTo(true),
+                        "user.email", equalTo(emailAddress),
+                        "user.name", equalTo(username),
+                        "accessToken", notNullValue(),
+                        "refreshToken", notNullValue()
+                );
     }
 
     @Test
@@ -66,7 +66,8 @@ public class UserCreateAndLoginTest {
     public void checkImpossibleToCreateSameUser () {
 
         // проверили статус и частично тело
-        response.then().assertThat()
+        response.then()
+                .assertThat()
                 .statusCode(SC_OK)
                 .and()
                 .body("success", equalTo(true));
@@ -75,41 +76,67 @@ public class UserCreateAndLoginTest {
         Response secondResponse = userAPI.postForUserCreating(user);
 
         // проверили статус и тело ответа
-        secondResponse.then().assertThat()
+        secondResponse.then()
+                .assertThat()
                 .statusCode(SC_FORBIDDEN)
-                .and()
                 .body("message", equalTo("User already exists"));
     }
 
     @Test
     @DisplayName("Позитивная проверка логина пользователя.")
-    @Description("Проверяется возможность входа нового созданного пользователя в систему.")
+    @Description("Проверяется возможность входа нового созданного пользователя в систему с корректными данными.")
     public void successfulUserLogin () {
 
         // получили ответ на запрос входа в систему
         Response loginResponse = userAPI.loginUser(user);
 
         // проверили статус и поля
-        loginResponse.then().assertThat()
+        loginResponse.then()
+                .assertThat()
                 .statusCode(SC_OK)
-                .and()
-                .body("success", equalTo(true))
-                .and()
-                .body("user.email", equalTo(emailAddress))
-                .and()
-                .body("user.name", equalTo(username))
-                .and()
-                .body("accessToken", notNullValue())
-                .and()
-                .body("refreshToken", notNullValue());
+                .body(
+                        "success", equalTo(true),
+                        "user.email", equalTo(emailAddress),
+                        "user.name", equalTo(username),
+                        "accessToken", notNullValue(),
+                        "refreshToken", notNullValue()
+                );
     }
 
+    @Test
+    @DisplayName("Негативная проверка логина пользователя.")
+    @Description("Проверяется возможность входа нового созданного пользователя в систему с некорректными данными.")
+    public void unsuccessfulUserLogin () {
+        // убедились, что созданный пользователь может войти
+        Response loginResponse = userAPI.loginUser(user);
+        loginResponse.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body("success", equalTo(true));
 
+        // выходим из системы
+        userAPI.logoutUser(refreshToken);
+
+        // поменяли пользователю пароль
+        String newPassword = faker.internet().password();
+        user.setPassword(newPassword);
+
+        // снова пытаемся войти в систему
+        Response negativeResponse = userAPI.loginUser(user);
+
+        // проверяем статус и ответ
+        negativeResponse.then()
+                .assertThat()
+                .statusCode(SC_UNAUTHORIZED)
+                .body("success", equalTo(false),
+                        "message", equalTo("email or password are incorrect")
+                );
+    }
 
 
 
     @After
     public void userDelete () {
-        userAPI.deleteUser(user, accessToken);
+        userAPI.deleteUser(accessToken);
     }
 }

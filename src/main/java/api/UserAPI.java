@@ -13,7 +13,7 @@ import static io.restassured.RestAssured.given;
 
 public class UserAPI {
 
-    @Step ("Получение ответа на POST запрос создания пользователя. Ручка /api/auth/register.")
+    @Step ("Получение ответа на POST запрос создания пользователя. Ручка api/auth/register.")
     public Response postForUserCreating (User user) {
         System.out.println("-> Создаётся пользователь...");
 
@@ -83,7 +83,7 @@ public class UserAPI {
         return refreshToken;
     }
 
-    @Step ("Получение ответа на POST запрос логина пользователя. Ручка /api/auth/login.")
+    @Step ("Получение ответа на POST запрос логина пользователя. Ручка api/auth/login.")
     public Response loginUser (User user) {
         System.out.println("-> Выполняется вход пользователя в систему...");
 
@@ -108,14 +108,49 @@ public class UserAPI {
         return response;
     }
 
-    @Step ("Удаления пользователя с проверкой статус-кода и тела ответа. Ручка /api/auth/user.")
-    public void deleteUser (User user, String accessToken) {
+    @Step ("Выход пользователя из системы с проверкой статус-кода и тела ответа. Ручка api/auth/logout.")
+    public Response logoutUser (String refreshToken) {
+        System.out.println("-> Выполняется выход пользователя из системы...");
+
+        // задаём боди
+        String body = String.format("{\"token\":\"%s\"}", refreshToken);
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(body)
+                .when()
+                .post("api/auth/logout");
+
+        // вывод сообщения в зависимости от исхода запроса
+        String responseBody = response
+                .then()
+                .extract()
+                .body()
+                .asString();
+        int statusCode = response.getStatusCode();
+        String info = (statusCode == SC_OK)
+                ? String.format("Статус-код: %d. Пользователь вышел из системы.%n", statusCode)
+                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус-код не совпал с ожидаемым.%nТело ответа: %s.%nПользователь не вышел из системы.%n", responseBody);
+        System.out.println(info);
+
+        // проверка статуса и тела ответа
+        response.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body( "success", equalTo(true),
+                        "message", equalTo("Successful logout")
+                );
+
+        return response;
+    }
+
+    @Step ("Удаления пользователя с проверкой статус-кода и тела ответа. Ручка api/auth/user.")
+    public void deleteUser (String accessToken) {
         System.out.println("-> Удаляется пользователь...");
 
         Response response = given()
                 .contentType(ContentType.JSON)
                 .auth().oauth2(accessToken)
-                .body(user)
                 .when()
                 .delete(USER_DELETE);
 
@@ -128,16 +163,17 @@ public class UserAPI {
         int statusCode = response.getStatusCode();
         String info = (statusCode == SC_ACCEPTED)
                 ? String.format("Статус-код: %d. Пользователь удалён.%n", statusCode)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Тело ответа: %s.%nПользователь не удалён.%n", responseBody);
+                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус-код не совпал с ожидаемым.%nТело ответа: %s.%nПользователь не удалён.%n", responseBody);
         System.out.println(info);
 
         // проверка статуса и тела ответа
-        response
-                .then()
+        response.then()
                 .assertThat()
                 .statusCode(SC_ACCEPTED)
-                .and()
-                .body("message", equalTo("User successfully removed"));
+                .body(
+                        "success", equalTo(true),
+                        "message", equalTo("User successfully removed")
+                );
     }
 
 
