@@ -85,7 +85,7 @@ public class UserCreateAndLoginTest {
     @Test
     @DisplayName("Позитивная проверка логина пользователя.")
     @Description("Проверяется возможность входа нового созданного пользователя в систему с корректными данными.")
-    public void successfulUserLogin () {
+    public void successfulUserLoginTest () {
 
         // получили ответ на запрос входа в систему
         Response loginResponse = userAPI.loginUser(user);
@@ -104,9 +104,9 @@ public class UserCreateAndLoginTest {
     }
 
     @Test
-    @DisplayName("Негативная проверка логина пользователя.")
+    @DisplayName("Негативная проверка логина пользователя. Неверный пароль.")
     @Description("Проверяется возможность входа нового созданного пользователя в систему с некорректными данными.")
-    public void unsuccessfulUserLogin () {
+    public void wrongPasswordUserLoginTest () {
         // убедились, что созданный пользователь может войти
         Response loginResponse = userAPI.loginUser(user);
         loginResponse.then()
@@ -120,6 +120,36 @@ public class UserCreateAndLoginTest {
         // поменяли пользователю пароль
         String newPassword = faker.internet().password();
         user.setPassword(newPassword);
+
+        // снова пытаемся войти в систему
+        Response negativeResponse = userAPI.loginUser(user);
+
+        // проверяем статус и ответ
+        negativeResponse.then()
+                .assertThat()
+                .statusCode(SC_UNAUTHORIZED)
+                .body("success", equalTo(false),
+                        "message", equalTo("email or password are incorrect")
+                );
+    }
+
+    @Test
+    @DisplayName("Негативная проверка логина пользователя. Неверный логин.")
+    @Description("Проверяется возможность входа нового созданного пользователя в систему с некорректными данными.")
+    public void wrongEmailUserLoginTest () {
+        // убедились, что созданный пользователь может войти
+        Response loginResponse = userAPI.loginUser(user);
+        loginResponse.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body("success", equalTo(true));
+
+        // выходим из системы
+        userAPI.logoutUser(refreshToken);
+
+        // поменяли пользователю пароль
+        String newEmailAddress = faker.internet().password();
+        user.setEmail(newEmailAddress);
 
         // снова пытаемся войти в систему
         Response negativeResponse = userAPI.loginUser(user);
