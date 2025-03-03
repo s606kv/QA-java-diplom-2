@@ -12,6 +12,7 @@ import service.ServiceLinks;
 import service.User;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 @RunWith(Parameterized.class)
@@ -21,26 +22,37 @@ public class UserCreateRequiredFieldsParameterizedTest {
     private UserAPI userAPI = new UserAPI();
     private User user;
 
+    // поля для задания параметров
     private final String email;
     private final String password;
     private final String name;
+    private final boolean successKeyValue;
+    private final int status;
     private final String testName;
 
-
-
-    public UserCreateRequiredFieldsParameterizedTest(String email, String password, String name, String testName) {
+    // конструктор
+    public UserCreateRequiredFieldsParameterizedTest(String email,
+                                                     String password,
+                                                     String name,
+                                                     boolean successKeyValue,
+                                                     int status,
+                                                     String testName) {
         this.email=email;
         this.password=password;
         this.name=name;
+        this.successKeyValue=successKeyValue;
+        this.status=status;
         this.testName=testName;
     }
 
-    @Parameterized.Parameters (name="{3}")
+    // параметры
+    @Parameterized.Parameters (name="{5}")
     public static Object[][] setData () {
         return new Object[][] {
-                {"", faker.internet().password(), faker.name().username(), "Отсутствует поле \"email\""},
-                {faker.internet().emailAddress(), "", faker.name().username(), "Отсутствует поле \"password\""},
-                {faker.internet().emailAddress(), faker.internet().password(), "", "Отсутствует поле \"name\""},
+                {faker.internet().emailAddress(), faker.internet().password(), faker.name().username(), true, SC_OK, "Обязательные поля заполнены"},
+                {"", faker.internet().password(), faker.name().username(), false, SC_FORBIDDEN, "Отсутствует поле \"email\""},
+                {faker.internet().emailAddress(), "", faker.name().username(), false, SC_FORBIDDEN, "Отсутствует поле \"password\""},
+                {faker.internet().emailAddress(), faker.internet().password(), "", false, SC_FORBIDDEN, "Отсутствует поле \"name\""},
         };
     }
 
@@ -56,12 +68,20 @@ public class UserCreateRequiredFieldsParameterizedTest {
     public void impossibleToCreateUserWithoutRequiredField () {
 
         // попытка создать пользователя без требуемых полей
-        Response response = userAPI.postForUserCreating(user);
+        Response response = userAPI.userCreating(user);
 
         // проверили статус и тело ответа
         response.then().assertThat()
-                .statusCode(SC_FORBIDDEN)
+                .statusCode(status)
                 .and()
-                .body("message", equalTo("Email, password and name are required fields"));
+                .body(
+                        "success", equalTo(successKeyValue)
+                );
+
+        // если пользователь создался, то удаляем его
+        if (status == 200) {
+            String accessToken = userAPI.getAccessToken(response);
+            userAPI.deleteUser(accessToken);
+        }
     }
 }
