@@ -3,6 +3,7 @@ import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,9 +19,15 @@ import static org.hamcrest.CoreMatchers.equalTo;
 @RunWith(Parameterized.class)
 public class UserCreateRequiredFieldsParameterizedTest {
 
+    // фейковые данные
     private static Faker faker = new Faker();
+    private static final String fakedEmail = faker.internet().emailAddress();
+    private static final String fakedPassword = faker.internet().password();
+    private static final String fakedName = faker.name().username();
+
     private UserAPI userAPI = new UserAPI();
     private User user;
+    private Response response;
 
     // поля для задания параметров
     private final String email;
@@ -49,26 +56,26 @@ public class UserCreateRequiredFieldsParameterizedTest {
     @Parameterized.Parameters (name="{5}")
     public static Object[][] setData () {
         return new Object[][] {
-                {faker.internet().emailAddress(), faker.internet().password(), faker.name().username(), true, SC_OK, "Обязательные поля заполнены"},
-                {"", faker.internet().password(), faker.name().username(), false, SC_FORBIDDEN, "Отсутствует поле \"email\""},
-                {faker.internet().emailAddress(), "", faker.name().username(), false, SC_FORBIDDEN, "Отсутствует поле \"password\""},
-                {faker.internet().emailAddress(), faker.internet().password(), "", false, SC_FORBIDDEN, "Отсутствует поле \"name\""},
+                {fakedEmail, fakedPassword, fakedName, true, SC_OK, "Обязательные поля заполнены"},
+                {"", fakedPassword, fakedName, false, SC_FORBIDDEN, "Отсутствует поле \"email\""},
+                {fakedEmail, "", fakedName, false, SC_FORBIDDEN, "Отсутствует поле \"password\""},
+                {fakedEmail, fakedPassword, "", false, SC_FORBIDDEN, "Отсутствует поле \"name\""},
         };
     }
 
     @Before
-    public void setUp () {
+    public void preconditions () {
         RestAssured.baseURI = ServiceLinks.BASE_URI;
         user = new User(email, password, name);
     }
 
     @Test
     @DisplayName("Параметризованный тест создания пользователя с разными вариантами заполнения обязательных полей.")
-    @Description("Проверяется возможность создать пользователя без указания одного из обязательных полей.")
-    public void impossibleToCreateUserWithoutRequiredField () {
+    @Description("Проверяется возможность создать пользователя со всеми заполненными полями и без указания одного из обязательных полей.")
+    public void createUserWithRequiredFields () {
 
         // попытка создать пользователя без требуемых полей
-        Response response = userAPI.userCreating(user);
+        response = userAPI.userCreating(user);
 
         // проверили статус и тело ответа
         response.then().assertThat()
@@ -77,7 +84,10 @@ public class UserCreateRequiredFieldsParameterizedTest {
                 .body(
                         "success", equalTo(successKeyValue)
                 );
+    }
 
+    @After
+    public void postconditions () {
         // если пользователь создался, то удаляем его
         if (status == 200) {
             String accessToken = userAPI.getAccessToken(response);
