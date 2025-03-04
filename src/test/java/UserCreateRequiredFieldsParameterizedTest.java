@@ -80,7 +80,6 @@ public class UserCreateRequiredFieldsParameterizedTest {
         // проверили статус и тело ответа
         response.then().assertThat()
                 .statusCode(status)
-                .and()
                 .body(
                         "success", equalTo(successKeyValue)
                 );

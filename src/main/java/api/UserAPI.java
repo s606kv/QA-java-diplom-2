@@ -3,38 +3,58 @@ package api;
 import io.qameta.allure.Step;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import service.User;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 import static service.ServiceLinks.*;
 import static io.restassured.RestAssured.given;
 
 public class UserAPI {
+    private RequestSpecification request = given().contentType(ContentType.JSON);
 
-    @Step ("Получение ответа на POST запрос создания пользователя. Ручка api/auth/register.")
-    public Response userCreating (User user) {
-        System.out.println("-> Создаётся пользователь.");
-
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .body(user)
-                .when()
-                .post(USER_CREATE);
-
-        // вывод сообщения в зависимости от исхода запроса
+    // сервисный метод печати информации в зависимости от статус-кода
+    public void printResponseInfo (Response response, int expectedStatusCode, String otherInfo) {
+        // формируем тело ответа
         String responseBody = response
                 .then()
                 .extract()
                 .body()
                 .asString();
-        int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_OK)
-                ? String.format("Статус-код: %d.%nСоздан пользователь.%n", statusCode)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус: %d.%nТело ответа: %s.%nПользователь не создан.%n", statusCode, responseBody);
+        // получаем статус-код
+        int actualStatusCode = response.getStatusCode();
+        // печатаем результат запроса
+        String info = (actualStatusCode == expectedStatusCode)
+                ? String.format("Статус-код: %d.%nУспешный запрос.%n%s", actualStatusCode, otherInfo)
+                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус: %d.%nТело ответа: %s.%nЗапрос некорректный.%n", actualStatusCode, responseBody);
         System.out.println(info);
+    }
+
+    // сервисный метод извлечения данных пользователя из тела ответа
+    public String extractUserData (Response response) {
+        // извлекаем емэйл
+        String jsonEmail = response.then().extract().body().path("user.email");
+        // извлекаем имя
+        String jsonName = response.then().extract().body().path("user.name");
+        // создаём информацию с данными пользователя
+        String extractedInfo = String.format("Данные пользователя:%nemail: %s%nимя: %s%n", jsonEmail, jsonName);
+
+        return extractedInfo;
+    };
+
+    @Step ("POST. Получение ответа на запрос создания пользователя. Ручка api/auth/register.")
+    public Response userCreating (User user) {
+        System.out.println("-> Создаётся пользователь.");
+
+        Response response = request
+                .body(user)
+                .when()
+                .post(USER_CREATE);
+
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
 
         return response;
     }
@@ -88,7 +108,7 @@ public class UserAPI {
         return refreshToken;
     }
 
-    @Step ("Получение ответа на POST запрос логина пользователя. Ручка api/auth/login.")
+    @Step ("POST. Получение ответа на запрос логина пользователя. Ручка api/auth/login.")
     public Response loginUser (User user) {
         System.out.println("-> Выполняется вход пользователя в систему.");
 
@@ -98,22 +118,13 @@ public class UserAPI {
                 .when()
                 .post(USER_LOGIN);
 
-        // вывод сообщения в зависимости от исхода запроса
-        String responseBody = response
-                .then()
-                .extract()
-                .body()
-                .asString();
-        int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_OK)
-                ? String.format("Статус-код: %d.%nПользователь залогинен.%n", statusCode)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус: %d.%nТело ответа: %s.%nПользователь не залогинен.%n", statusCode, responseBody);
-        System.out.println(info);
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
 
         return response;
     }
 
-    @Step ("Выход пользователя из системы с проверкой статус-кода и тела ответа. Ручка api/auth/logout.")
+    @Step ("POST. Выход пользователя из системы с проверкой статус-кода и тела ответа. Ручка api/auth/logout.")
     public Response logoutUser (String refreshToken) {
         System.out.println("-> Выполняется выход пользователя из системы.");
 
@@ -126,17 +137,8 @@ public class UserAPI {
                 .when()
                 .post(USER_LOGOUT);
 
-        // вывод сообщения в зависимости от исхода запроса
-        String responseBody = response
-                .then()
-                .extract()
-                .body()
-                .asString();
-        int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_OK)
-                ? String.format("Статус-код: %d.%nПользователь вышел из системы.%n", statusCode)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус-код не совпал с ожидаемым.%nТело ответа: %s.%nПользователь не вышел из системы.%n", responseBody);
-        System.out.println(info);
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
 
         // проверка статуса и тела ответа
         response.then()
@@ -149,7 +151,7 @@ public class UserAPI {
         return response;
     }
 
-    @Step ("Получение ответа на GET запрос данных пользователя, проверка статуса и ответа. Ручка api/auth/user.")
+    @Step ("GET. Получение ответа на запрос данных пользователя, проверка статуса и ответа. Ручка api/auth/user.")
     public void getUserData (User user, String accessToken) {
         System.out.println("-> Получение пользовательских данных.");
 
@@ -158,29 +160,43 @@ public class UserAPI {
                 .auth().oauth2(accessToken)
                 .get(USER_DATA);
 
-        // вывод сообщения в зависимости от исхода запроса
-        String responseBody = response
-                .then()
-                .extract()
-                .body()
-                .asString();
-        int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_OK)
-                ? String.format("Статус-код: %d.%nДанные пользователя получены:%nemail: %s%nимя: %s%n", statusCode, user.getEmail(), user.getName())
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус-код не совпал с ожидаемым.%nТело ответа: %s.%nДанные о пользователе не получены.%n", responseBody);
-        System.out.println(info);
+        // извлекаем информацию из ответа
+        String otherInfo = extractUserData(response);
+
+        // печатаем информацию о запросе с данными пользователя
+        printResponseInfo(response, SC_OK, otherInfo);
 
         // проверка статуса и тела ответа
         response.then()
                 .assertThat()
                 .statusCode(SC_OK)
                 .body( "success", equalTo(true),
-                        "user.email", notNullValue(),
-                        "user.name", notNullValue()
+                        "user.email", equalTo(user.getEmail()),
+                        "user.name", equalTo(user.getName())
                 );
     }
 
-    @Step ("Удаления пользователя с проверкой статус-кода и тела ответа. Ручка api/auth/user.")
+    @Step ("PATCH. Получение ответа на запрос изменения данных пользователя. Ручка api/auth/user.")
+    public Response changeUserData (User user, String accessToken) {
+        System.out.println("-> Меняются данные пользователя.");
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .auth().oauth2(accessToken)
+                .body(user)
+                .when()
+                .patch(USER_DATA);
+
+        // извлекаем информацию из ответа
+        String otherInfo = extractUserData(response);
+
+        // печатаем информацию о запросе с данными пользователя
+        printResponseInfo(response, SC_OK, otherInfo);
+
+        return response;
+    }
+
+    @Step ("DELETE. Удаления пользователя с проверкой статус-кода и тела ответа. Ручка api/auth/user.")
     public void deleteUser (String accessToken) {
         System.out.println("-> Удаляется пользователь.");
 
@@ -190,17 +206,8 @@ public class UserAPI {
                 .when()
                 .delete(USER_DELETE);
 
-        // вывод сообщения в зависимости от исхода запроса
-        String responseBody = response
-                .then()
-                .extract()
-                .body()
-                .asString();
-        int statusCode = response.getStatusCode();
-        String info = (statusCode == SC_ACCEPTED)
-                ? String.format("Статус-код: %d.%nПользователь удалён.%n", statusCode)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус-код не совпал с ожидаемым.%nТело ответа: %s.%nПользователь не удалён.%n", responseBody);
-        System.out.println(info);
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_ACCEPTED, "");
 
         // проверка статуса и тела ответа
         response.then()

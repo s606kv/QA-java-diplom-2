@@ -13,7 +13,7 @@ import service.User;
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 
-public class UserCreateTest {
+public class UserCreateSameUserTest {
     private User user;
     private UserAPI userAPI;
     private String accessToken;
@@ -46,8 +46,7 @@ public class UserCreateTest {
     @Test
     @DisplayName("Негативная проверка создания пользователя, уже существующего в бд.")
     @Description("Проверяется возможность создать пользователя, с теми же самыми данными, с которыми он уже был ранее создан.")
-    public void checkImpossibleToCreateSameUser () {
-
+    public void createSameUserTest () {
         // проверили статус и частично тело
         response.then()
                 .assertThat()
@@ -55,9 +54,10 @@ public class UserCreateTest {
                 .and()
                 .body("success", equalTo(true));
 
-        // отправили новый запрос с теми же данными
-        Response secondResponse = userAPI.userCreating(user);
+        System.out.println("Попытка создать пользователя с теми же данными.");
 
+        // отправляем повторный запрос с теми же данными
+        Response secondResponse = userAPI.userCreating(user);
         // проверили статус и тело ответа
         secondResponse.then()
                 .assertThat()
