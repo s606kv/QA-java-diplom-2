@@ -40,7 +40,7 @@ public class UserAPI {
 
         // вывод сообщения в зависимости от исхода запроса
         if(!untrimmedAccessToken.isEmpty()) {
-            System.out.println(String.format("\uD83D\uDFE2 Получен accessToken:%n%s%n", cleanAccessToken));
+            System.out.println(String.format("\uD83D\uDFE2 accessToken:%n%s%n", cleanAccessToken));
         } else {
             System.out.println("\uD83D\uDFE1 ВНИМАНИЕ. accessToken не получен.\n");
         }
@@ -64,7 +64,7 @@ public class UserAPI {
 
         // вывод сообщения в зависимости от исхода запроса
         if(!refreshToken.isEmpty()) {
-            System.out.println(String.format("\uD83D\uDFE2 Получен refreshToken:%n%s%n", refreshToken));
+            System.out.println(String.format("\uD83D\uDFE2 refreshToken:%n%s%n", refreshToken));
         } else {
             System.out.println("\uD83D\uDFE1 ВНИМАНИЕ. refreshToken не получен.\n");
         }

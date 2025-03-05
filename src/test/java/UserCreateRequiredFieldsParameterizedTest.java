@@ -13,6 +13,9 @@ import service.User;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
 public class UserCreateRequiredFieldsParameterizedTest {
@@ -23,6 +26,11 @@ public class UserCreateRequiredFieldsParameterizedTest {
     private static final String fakedPassword = faker.internet().password();
     private static final String fakedName = faker.name().username();
 
+    // поля класса
+    private UserAPI userAPI = new UserAPI();
+    private User user;
+    private Response response;
+
     // поля для параметров
     private final String email;
     private final String password;
@@ -30,11 +38,6 @@ public class UserCreateRequiredFieldsParameterizedTest {
     private final boolean successKeyValue;
     private final int status;
     private final String testName;
-
-    private UserAPI userAPI = new UserAPI();
-    private User user;
-    private Response response;
-
     // конструктор
     public UserCreateRequiredFieldsParameterizedTest(String email,
                                                      String password,
@@ -71,22 +74,21 @@ public class UserCreateRequiredFieldsParameterizedTest {
     @Description("Проверяется возможность создать пользователя со всеми заполненными полями и без указания одного из обязательных полей.")
     public void createUserWithRequiredFields () {
 
-        // попытка создать пользователя без требуемых полей
+        // создаётся пользователь с параметризацией
         response = userAPI.userCreating(user);
 
-        // проверили статус и тело ответа
-        response.then().assertThat()
-                .statusCode(status)
-                .body(
-                        "success", equalTo(successKeyValue)
-                );
-    }
-
-    @After /// Если пользователь создался, то удаляем его
-    public void postconditions () {
-        if (status == 200) {
+        // если пользователь создался, что проверяется тело ответа, извлекается accessToken и пользователь удаляется
+        if (response.getStatusCode()==SC_OK) {
+            checkUserPositiveResponse(response, user, status, successKeyValue);
             String accessToken = userAPI.getAccessToken(response);
             userAPI.deleteUser(accessToken);
         }
+
+        // если пользователь не создался, что просто проверяется тело ответа
+        if (response.getStatusCode()==SC_FORBIDDEN) {
+            String messageKeyValue = "Email, password and name are required fields";
+            checkUserNegativeResponse(response, status, successKeyValue, messageKeyValue);
+        }
+
     }
 }

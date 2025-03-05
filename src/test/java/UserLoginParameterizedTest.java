@@ -12,8 +12,8 @@ import service.User;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
 public class UserLoginParameterizedTest {
@@ -69,26 +69,19 @@ public class UserLoginParameterizedTest {
     public void preconditions () {
         userAPI = new UserAPI();
         user = new User(userEmail, userPassword, userName);
-        // запрос на создание юзера
+        // создали пользователя
         response = userAPI.userCreating(user);
-        // получили accessToken
+        // проверили статус и тело
+        checkUserPositiveResponse(response, user, SC_OK, true);
+        // получили токены
         accessToken = userAPI.getAccessToken(response);
-        // получили refreshToken
         refreshToken = userAPI.getRefreshToken(response);
         // отобразили данные пользователя
         userAPI.getUserData(user, accessToken);
-        // вошли в систему, проверили статус и ответ
-        userAPI.loginUser(user)
-                .then()
-                .assertThat()
-                .statusCode(SC_OK)
-                .body(
-                        "success", equalTo(true),
-                        "user.email", equalTo(userEmail),
-                        "user.name", equalTo(userName),
-                        "accessToken", notNullValue(),
-                        "refreshToken", notNullValue()
-                );
+        // вошли в систему, чтобы убедиться, что созданный пользователь имеет доступ
+        response = userAPI.loginUser(user);
+        // проверили статус и тело
+        checkUserPositiveResponse(response, user, SC_OK, true);
         // вышли из системы
         userAPI.logoutUser(refreshToken);
     }
@@ -98,44 +91,41 @@ public class UserLoginParameterizedTest {
     @Description("Проверяется возможность входа пользователя с верными данными и с неверным логином или паролем.")
     public void userLoginTest () {
 
-        /// Определяем условия для негативных проверок.
-        // если данные не менялись, то проверяется просто вход в систему
+        /// Определяем условия для проверок разных параметров.
+        // если данные не менялись, то происходит только первый вход в систему из @before
         if (email.equals(userEmail) && password.equals(userPassword)) {
-            System.out.println("✅ Данные не менялись. " +
+            System.out.println("\uD83D\uDD35 Данные не менялись. " +
                     "Проверка повторного входа не требуется.\n");
             return;
         }
 
-        // если заменили в запросе только емэйл
+        // заменили в запросе только емэйл
         if (!email.equals(userEmail) && password.equals(userPassword)) {
             user.setEmail(email);
-            System.out.println(String.format("Сменили в запросе поле email на \"%s\".%n", email));
+            System.out.println(String.format("\uD83D\uDD35 Поле email изменено в запросе на \"%s\"%n", email));
         }
 
-        // если заменили в запросе только пароль
+        // заменили в запросе только пароль
         if (email.equals(userEmail) && !password.equals(userPassword)) {
             user.setPassword(password);
-            System.out.println(String.format("Сменили в запросе поле password на \"%s\".%n", password));
+            System.out.println(String.format("\uD83D\uDD35 Поле password изменено в запросе на \"%s\"%n", password));
         }
 
-        // если заменили в запросе оба поля
+        // заменили в запросе оба поля
         if (!email.equals(userEmail) && !password.equals(userPassword)) {
             user.setEmail(email);
             user.setPassword(password);
-            System.out.println(String.format("Передали в запросе неверные поля email и password.%n" +
-                    "Новый email в запросе: \"%s\".%n" +
-                    "Новый password в запросе: \"%s\".%n", email, password));
+            System.out.println(String.format("\uD83D\uDD35 В запросе изменены оба поля.%n" +
+                    "Новый email в запросе: %s%n" +
+                    "Новый password в запросе: %s%n", email, password));
         }
 
-        // выполняем повторный логин в систему
-        Response negativeResponse = userAPI.loginUser(user);
-        // проверка статуса и ответа
-        negativeResponse.then()
-                .assertThat()
-                .statusCode(status)
-                .body("success", equalTo(successKeyValue),
-                        "message", equalTo("email or password are incorrect")
-                );
+        // проверяем повторный вход в систему с новыми данными
+        Response secondResponse = userAPI.loginUser(user);
+
+        // проверяем статус и ответ
+        String messageKeyValue = "email or password are incorrect";
+        checkUserNegativeResponse(secondResponse, status, successKeyValue, messageKeyValue);
     }
 
     @After /// Удаляем пользователя

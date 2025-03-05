@@ -5,6 +5,8 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 
 public class Utilities {
     public static final String BASE_URI = "https://stellarburgers.nomoreparties.site/";
@@ -43,5 +45,27 @@ public class Utilities {
         String extractedInfo = String.format("Данные пользователя:%nemail: %s%nимя: %s%n", jsonEmail, jsonName);
 
         return extractedInfo;
+    }
+
+    // сервисный метод проверки негативного ответа
+    public static void checkUserNegativeResponse (Response response, int statusCode, boolean successKeyValue, String messageKeyValue) {
+        response.then()
+                .assertThat()
+                .statusCode(statusCode)
+                .body("success", equalTo(successKeyValue),
+                        "message", equalTo(messageKeyValue));
+    }
+
+    // сервисный метод проверки позитивного ответа с токенами
+    public static void checkUserPositiveResponse (Response response, User user, int statusCode, boolean successKeyValue) {
+        response.then()
+                .assertThat()
+                .statusCode(statusCode)
+                .body("success", equalTo(successKeyValue),
+                        "user.email", equalTo(user.getEmail()),
+                        "user.name", equalTo(user.getName()),
+                        "accessToken", notNullValue(),
+                        "refreshToken", notNullValue()
+                );
     }
 }

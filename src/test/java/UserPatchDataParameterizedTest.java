@@ -12,7 +12,8 @@ import service.User;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
 public class UserPatchDataParameterizedTest {
@@ -28,7 +29,6 @@ public class UserPatchDataParameterizedTest {
     private UserAPI userAPI = new UserAPI();
     private User user;
     private Response response;
-    private String refreshToken;
     private String accessToken;
 
     // переменные параметров
@@ -66,30 +66,18 @@ public class UserPatchDataParameterizedTest {
         user = new User(userEmail, userPassword, userName);
         // запрос на создание юзера
         response = userAPI.userCreating(user);
+        // проверили статус и тело
+        checkUserPositiveResponse(response, user, SC_OK, true);
         // получили accessToken
         accessToken = userAPI.getAccessToken(response);
-        // получили refreshToken
-        refreshToken = userAPI.getRefreshToken(response);
         // отобразили данные пользователя
         userAPI.getUserData(user, accessToken);
-        // вошли в систему, проверили статус и ответ
-        userAPI.loginUser(user)
-                .then()
-                .assertThat()
-                .statusCode(SC_OK)
-                .body(
-                        "success", equalTo(true),
-                        "user.email", equalTo(userEmail),
-                        "user.name", equalTo(userName),
-                        "accessToken", notNullValue(),
-                        "refreshToken", notNullValue()
-                );
     }
 
     @Test
-    @DisplayName("Параметризованный тест смены пользовательских данных.")
-    @Description("Проверяется возможность смены данных пользователя в том числе с занятым емэйлом.")
-    public void userPatchDataTest () {
+    @DisplayName("Параметризованный тест смены пользовательских данных для авторизованного пользователя.")
+    @Description("Проверяется возможность смены данных авторизованного пользователя.")
+    public void userAuthorizedPatchDataTest () {
 
          /// Определяем условия для проверок.
         // если данные не менялись
@@ -97,19 +85,19 @@ public class UserPatchDataParameterizedTest {
             System.out.println("\uD83D\uDD35 Данные в запросе не изменены.\nОтправляется запрос на изменение.\n");
         }
 
-        // если меняем только емэйл
+        // меняем только емэйл
         if (!email.equals(userEmail) && name.equals(userName)) {
             user.setEmail(email);
             System.out.println(String.format("\uD83D\uDD35 Сменили в запросе поле email на \"%s\".%n", email));
         }
 
-        // если меняем только имя
+        // меняем только имя
         if (email.equals(userEmail) && !name.equals(userName)) {
             user.setName(name);
             System.out.println(String.format("\uD83D\uDD35 Сменили в запросе поле name на \"%s\".%n", name));
         }
 
-        // если меняем оба поля
+        // меняем оба поля
         if (!email.equals(userEmail) && !name.equals(userName)) {
             user.setEmail(email);
             user.setName(name);
@@ -128,6 +116,19 @@ public class UserPatchDataParameterizedTest {
                         "user.email", equalTo(user.getEmail()),
                         "user.name", equalTo(user.getName())
                 );
+    }
+
+    @Test
+    @DisplayName("Параметризованный тест смены пользовательских данных для неавторизованного пользователя.")
+    @Description("Проверяется возможность смены данных неавторизованного пользователя.")
+    public void userNonAuthorizedPatchDataTest () {
+        // запрос на изменение данных без авторизации
+        System.out.println("\uD83D\uDD35 Попытка замены данных без токена авторизации.\n");
+        Response patchResponse = userAPI.changeUserData(user, "");
+
+        // проверка статуса и тела
+        String messageKeyValue = "You should be authorised";
+        checkUserNegativeResponse(patchResponse, SC_UNAUTHORIZED, false, messageKeyValue);
     }
 
     @After /// Удаляем пользователя
