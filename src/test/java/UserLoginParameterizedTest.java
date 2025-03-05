@@ -100,28 +100,28 @@ public class UserLoginParameterizedTest {
 
         /// Определяем условия для негативных проверок.
         // если данные не менялись, то проверяется просто вход в систему
-        if (email.equals(user.getEmail()) && password.equals(user.getPassword())) {
-            System.out.println("Данные не менялись. " +
+        if (email.equals(userEmail) && password.equals(userPassword)) {
+            System.out.println("✅ Данные не менялись. " +
                     "Проверка повторного входа не требуется.\n");
             return;
         }
 
         // если заменили в запросе только емэйл
-        if (!email.equals(user.getEmail()) && password.equals(user.getPassword())) {
-            user.setEmail(newUserEmail);
+        if (!email.equals(userEmail) && password.equals(userPassword)) {
+            user.setEmail(email);
             System.out.println(String.format("Сменили в запросе поле email на \"%s\".%n", email));
         }
 
         // если заменили в запросе только пароль
-        if (email.equals(user.getEmail()) && !password.equals(user.getPassword())) {
-            user.setPassword(newUserPassword);
+        if (email.equals(userEmail) && !password.equals(userPassword)) {
+            user.setPassword(password);
             System.out.println(String.format("Сменили в запросе поле password на \"%s\".%n", password));
         }
 
         // если заменили в запросе оба поля
-        if (!email.equals(user.getEmail()) && !password.equals(user.getPassword())) {
-            user.setEmail(newUserEmail);
-            user.setPassword(newUserPassword);
+        if (!email.equals(userEmail) && !password.equals(userPassword)) {
+            user.setEmail(email);
+            user.setPassword(password);
             System.out.println(String.format("Передали в запросе неверные поля email и password.%n" +
                     "Новый email в запросе: \"%s\".%n" +
                     "Новый password в запросе: \"%s\".%n", email, password));

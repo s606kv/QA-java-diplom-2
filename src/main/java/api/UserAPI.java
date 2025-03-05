@@ -2,22 +2,20 @@ package api;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 import service.User;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 import static service.Utilities.*;
 
 public class UserAPI {
-    private RequestSpecification request = REQUEST;
 
     @Step ("POST. Получение ответа на запрос создания пользователя. Ручка api/auth/register.")
     public Response userCreating (User user) {
         System.out.println("-> Создаётся пользователь.");
 
-        Response response = request
+        Response response = REQUEST
                 .body(user)
                 .when()
                 .post(USER_CREATE);
@@ -42,9 +40,9 @@ public class UserAPI {
 
         // вывод сообщения в зависимости от исхода запроса
         if(!untrimmedAccessToken.isEmpty()) {
-            System.out.println(String.format("Получен accessToken:%n%s%n", cleanAccessToken));
+            System.out.println(String.format("\uD83D\uDFE2 Получен accessToken:%n%s%n", cleanAccessToken));
         } else {
-            System.out.println("⚠\uFE0F ВНИМАНИЕ. accessToken не получен.\n");
+            System.out.println("\uD83D\uDFE1 ВНИМАНИЕ. accessToken не получен.\n");
         }
 
         // проверка наличия accessToken
@@ -66,9 +64,9 @@ public class UserAPI {
 
         // вывод сообщения в зависимости от исхода запроса
         if(!refreshToken.isEmpty()) {
-            System.out.println(String.format("Получен refreshToken:%n%s%n", refreshToken));
+            System.out.println(String.format("\uD83D\uDFE2 Получен refreshToken:%n%s%n", refreshToken));
         } else {
-            System.out.println("⚠\uFE0F ВНИМАНИЕ. refreshToken не получен.\n");
+            System.out.println("\uD83D\uDFE1 ВНИМАНИЕ. refreshToken не получен.\n");
         }
 
         // проверка наличия refreshToken
@@ -81,7 +79,7 @@ public class UserAPI {
     public Response loginUser (User user) {
         System.out.println("-> Выполняется вход пользователя в систему.");
 
-        Response response = request
+        Response response = REQUEST
                 .body(user)
                 .when()
                 .post(USER_LOGIN);
@@ -99,7 +97,7 @@ public class UserAPI {
         // задаём боди
         String body = String.format("{\"token\":\"%s\"}", refreshToken);
 
-        Response response = request
+        Response response = REQUEST
                 .body(body)
                 .when()
                 .post(USER_LOGOUT);
@@ -122,7 +120,7 @@ public class UserAPI {
     public void getUserData (User user, String accessToken) {
         System.out.println("-> Получение пользовательских данных.");
 
-        Response response = request
+        Response response = REQUEST
                 .auth().oauth2(accessToken)
                 .get(USER_DATA);
 
@@ -143,15 +141,12 @@ public class UserAPI {
     }
 
     @Step ("PATCH. Получение ответа на запрос изменения данных пользователя. Ручка api/auth/user.")
-    public Response changeUserData (String email, String name, String accessToken) {
+    public Response changeUserData (User user, String accessToken) {
         System.out.println("-> Меняются данные пользователя.");
 
-        // задаём новый боди запроса
-        String jsonNewData = String.format("{\"email\": \"%s\", \"name\": \"%s\"", email, name);
-
-        Response response = request
+        Response response = REQUEST
                 .auth().oauth2(accessToken)
-                .body(jsonNewData)
+                .body(user)
                 .when()
                 .patch(USER_DATA);
 
@@ -168,7 +163,7 @@ public class UserAPI {
     public void deleteUser (String accessToken) {
         System.out.println("-> Удаляется пользователь.");
 
-        Response response = request
+        Response response = REQUEST
                 .auth().oauth2(accessToken)
                 .when()
                 .delete(USER_DELETE);
@@ -185,11 +180,5 @@ public class UserAPI {
                         "message", equalTo("User successfully removed")
                 );
     }
-
-
-
-
-
-
 
 }

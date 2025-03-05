@@ -54,7 +54,7 @@ public class UserCreateSameUserTest {
                 .and()
                 .body("success", equalTo(true));
 
-        System.out.println("Попытка создать пользователя с теми же данными.");
+        System.out.println("\uD83D\uDD35 Попытка создать пользователя с теми же данными.\n");
 
         // отправляем повторный запрос с теми же данными
         Response secondResponse = userAPI.userCreating(user);

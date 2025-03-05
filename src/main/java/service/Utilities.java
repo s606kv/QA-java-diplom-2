@@ -28,8 +28,8 @@ public class Utilities {
         int actualStatusCode = response.getStatusCode();
         // печатаем результат запроса
         String info = (actualStatusCode == expectedStatusCode)
-                ? String.format("Статус-код: %d.%nУспешный запрос.%n%s", actualStatusCode, otherInfo)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус: %d.%nТело ответа: %s.%nЗапрос некорректный.%n", actualStatusCode, responseBody);
+                ? String.format("\uD83D\uDFE2 Статус-код: %d.%nУспешный запрос.%n%s", actualStatusCode, otherInfo)
+                : String.format("\uD83D\uDFE1 ВНИМАНИЕ. Статус: %d.%nТело ответа: %s.%nЗапрос некорректный.%n", actualStatusCode, responseBody);
         System.out.println(info);
     }
 
