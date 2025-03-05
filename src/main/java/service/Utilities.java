@@ -1,9 +1,14 @@
 package service;
 
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 
-public class Service {
+import static io.restassured.RestAssured.given;
+
+public class Utilities {
     public static final String BASE_URI = "https://stellarburgers.nomoreparties.site/";
+    public static final RequestSpecification REQUEST = given().baseUri(BASE_URI).contentType(ContentType.JSON);
 
     public static final String USER_CREATE = "api/auth/register";
     public static final String USER_DELETE = "api/auth/user";

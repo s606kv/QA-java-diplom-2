@@ -1,7 +1,6 @@
 package api;
 
 import io.qameta.allure.Step;
-import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import service.User;
@@ -9,11 +8,10 @@ import service.User;
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
-import static service.Service.*;
-import static io.restassured.RestAssured.given;
+import static service.Utilities.*;
 
 public class UserAPI {
-    private RequestSpecification request = given().baseUri(BASE_URI).contentType(ContentType.JSON);
+    private RequestSpecification request = REQUEST;
 
     @Step ("POST. Получение ответа на запрос создания пользователя. Ручка api/auth/register.")
     public Response userCreating (User user) {
@@ -145,12 +143,15 @@ public class UserAPI {
     }
 
     @Step ("PATCH. Получение ответа на запрос изменения данных пользователя. Ручка api/auth/user.")
-    public Response changeUserData (User user, String accessToken) {
+    public Response changeUserData (String email, String name, String accessToken) {
         System.out.println("-> Меняются данные пользователя.");
+
+        // задаём новый боди запроса
+        String jsonNewData = String.format("{\"email\": \"%s\", \"name\": \"%s\"", email, name);
 
         Response response = request
                 .auth().oauth2(accessToken)
-                .body(user)
+                .body(jsonNewData)
                 .when()
                 .patch(USER_DATA);
 

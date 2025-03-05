@@ -7,7 +7,7 @@ import net.datafaker.Faker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import service.Service;
+import service.Utilities;
 import service.User;
 
 import static org.apache.http.HttpStatus.*;
@@ -28,7 +28,7 @@ public class UserCreateSameUserTest {
 
     @Before
     public void preconditions () {
-        RestAssured.baseURI = Service.BASE_URI;
+        RestAssured.baseURI = Utilities.BASE_URI;
         userAPI = new UserAPI();
 
         // создан пользователь
