@@ -9,40 +9,11 @@ import service.User;
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
-import static service.ServiceLinks.*;
+import static service.Service.*;
 import static io.restassured.RestAssured.given;
 
 public class UserAPI {
-    private RequestSpecification request = given().contentType(ContentType.JSON);
-
-    // сервисный метод печати информации в зависимости от статус-кода
-    public void printResponseInfo (Response response, int expectedStatusCode, String otherInfo) {
-        // формируем тело ответа
-        String responseBody = response
-                .then()
-                .extract()
-                .body()
-                .asString();
-        // получаем статус-код
-        int actualStatusCode = response.getStatusCode();
-        // печатаем результат запроса
-        String info = (actualStatusCode == expectedStatusCode)
-                ? String.format("Статус-код: %d.%nУспешный запрос.%n%s", actualStatusCode, otherInfo)
-                : String.format("⚠\uFE0F ВНИМАНИЕ. Статус: %d.%nТело ответа: %s.%nЗапрос некорректный.%n", actualStatusCode, responseBody);
-        System.out.println(info);
-    }
-
-    // сервисный метод извлечения данных пользователя из тела ответа
-    public String extractUserData (Response response) {
-        // извлекаем емэйл
-        String jsonEmail = response.then().extract().body().path("user.email");
-        // извлекаем имя
-        String jsonName = response.then().extract().body().path("user.name");
-        // создаём информацию с данными пользователя
-        String extractedInfo = String.format("Данные пользователя:%nemail: %s%nимя: %s%n", jsonEmail, jsonName);
-
-        return extractedInfo;
-    };
+    private RequestSpecification request = given().baseUri(BASE_URI).contentType(ContentType.JSON);
 
     @Step ("POST. Получение ответа на запрос создания пользователя. Ручка api/auth/register.")
     public Response userCreating (User user) {
@@ -112,8 +83,7 @@ public class UserAPI {
     public Response loginUser (User user) {
         System.out.println("-> Выполняется вход пользователя в систему.");
 
-        Response response = given()
-                .contentType(ContentType.JSON)
+        Response response = request
                 .body(user)
                 .when()
                 .post(USER_LOGIN);
@@ -131,8 +101,7 @@ public class UserAPI {
         // задаём боди
         String body = String.format("{\"token\":\"%s\"}", refreshToken);
 
-        Response response = given()
-                .contentType(ContentType.JSON)
+        Response response = request
                 .body(body)
                 .when()
                 .post(USER_LOGOUT);
@@ -155,8 +124,7 @@ public class UserAPI {
     public void getUserData (User user, String accessToken) {
         System.out.println("-> Получение пользовательских данных.");
 
-        Response response = given()
-                .contentType(ContentType.JSON)
+        Response response = request
                 .auth().oauth2(accessToken)
                 .get(USER_DATA);
 
@@ -180,8 +148,7 @@ public class UserAPI {
     public Response changeUserData (User user, String accessToken) {
         System.out.println("-> Меняются данные пользователя.");
 
-        Response response = given()
-                .contentType(ContentType.JSON)
+        Response response = request
                 .auth().oauth2(accessToken)
                 .body(user)
                 .when()
@@ -200,8 +167,7 @@ public class UserAPI {
     public void deleteUser (String accessToken) {
         System.out.println("-> Удаляется пользователь.");
 
-        Response response = given()
-                .contentType(ContentType.JSON)
+        Response response = request
                 .auth().oauth2(accessToken)
                 .when()
                 .delete(USER_DELETE);

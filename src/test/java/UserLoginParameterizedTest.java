@@ -1,7 +1,6 @@
 import api.UserAPI;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import net.datafaker.Faker;
 import org.junit.After;
@@ -9,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import service.ServiceLinks;
 import service.User;
 
 import static org.apache.http.HttpStatus.SC_OK;
@@ -29,7 +27,7 @@ public class UserLoginParameterizedTest {
     private static final String newFakedPassword = faker.internet().password();
 
     private UserAPI userAPI = new UserAPI();
-    private User user = new User(fakedEmail, fakedPassword, fakedName);
+    private User user;
 
     private final String email;
     private final String password;
@@ -69,7 +67,7 @@ public class UserLoginParameterizedTest {
 
     @Before
     public void preconditions () {
-        RestAssured.baseURI = ServiceLinks.BASE_URI;
+        user = new User(fakedEmail, fakedPassword, fakedName);
         // запрос на создание юзера
         response = userAPI.userCreating(user);
         // получили accessToken
@@ -109,7 +107,7 @@ public class UserLoginParameterizedTest {
     @Description("Проверяется возможность входа пользователя с верными данными и с неверным логином или паролем.")
     public void userLoginTest () {
 
-        /** Определяем условия для негативных проверок. */
+        /// Определяем условия для негативных проверок.
         // если неверный емэйл
         if (email!=user.getEmail() && password==user.getPassword()) {
             user.setEmail(newFakedEmail);
@@ -135,7 +133,7 @@ public class UserLoginParameterizedTest {
         }
     }
 
-    @After // удаляем пользователя
+    @After /// Удаляем пользователя
     public void postconditions () {
         userAPI.deleteUser(accessToken);
     }

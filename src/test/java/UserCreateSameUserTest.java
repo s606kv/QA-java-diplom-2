@@ -7,7 +7,7 @@ import net.datafaker.Faker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import service.ServiceLinks;
+import service.Service;
 import service.User;
 
 import static org.apache.http.HttpStatus.*;
@@ -28,7 +28,7 @@ public class UserCreateSameUserTest {
 
     @Before
     public void preconditions () {
-        RestAssured.baseURI = ServiceLinks.BASE_URI;
+        RestAssured.baseURI = Service.BASE_URI;
         userAPI = new UserAPI();
 
         // создан пользователь
@@ -65,7 +65,7 @@ public class UserCreateSameUserTest {
                 .body("message", equalTo("User already exists"));
     }
 
-    @After // удаляем пользователя
+    @After /// Удаляем пользователя
     public void postconditions () {
         userAPI.deleteUser(accessToken);
     }

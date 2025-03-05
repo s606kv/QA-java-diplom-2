@@ -1,7 +1,6 @@
 import api.UserAPI;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -9,7 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import net.datafaker.Faker;
-import service.ServiceLinks;
 import service.User;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
@@ -25,17 +23,17 @@ public class UserCreateRequiredFieldsParameterizedTest {
     private static final String fakedPassword = faker.internet().password();
     private static final String fakedName = faker.name().username();
 
-    private UserAPI userAPI = new UserAPI();
-    private User user;
-    private Response response;
-
-    // поля для задания параметров
+    // поля для параметров
     private final String email;
     private final String password;
     private final String name;
     private final boolean successKeyValue;
     private final int status;
     private final String testName;
+
+    private UserAPI userAPI = new UserAPI();
+    private User user;
+    private Response response;
 
     // конструктор
     public UserCreateRequiredFieldsParameterizedTest(String email,
@@ -65,7 +63,6 @@ public class UserCreateRequiredFieldsParameterizedTest {
 
     @Before
     public void preconditions () {
-        RestAssured.baseURI = ServiceLinks.BASE_URI;
         user = new User(email, password, name);
     }
 
@@ -85,9 +82,8 @@ public class UserCreateRequiredFieldsParameterizedTest {
                 );
     }
 
-    @After
+    @After /// Если пользователь создался, то удаляем его
     public void postconditions () {
-        // если пользователь создался, то удаляем его
         if (status == 200) {
             String accessToken = userAPI.getAccessToken(response);
             userAPI.deleteUser(accessToken);
