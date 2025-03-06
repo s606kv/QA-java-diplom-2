@@ -1,8 +1,9 @@
+package userTests;
+
 import api.UserAPI;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,9 +13,7 @@ import service.User;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_OK;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
@@ -87,7 +86,7 @@ public class UserCreateRequiredFieldsParameterizedTest {
         // если пользователь не создался, что просто проверяется тело ответа
         if (response.getStatusCode()==SC_FORBIDDEN) {
             String messageKeyValue = "Email, password and name are required fields";
-            checkUserNegativeResponse(response, status, successKeyValue, messageKeyValue);
+            checkNegativeResponse(response, status, successKeyValue, messageKeyValue);
         }
 
     }

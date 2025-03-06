@@ -17,6 +17,9 @@ public class Utilities {
     public static final String USER_LOGIN = "api/auth/login";
     public static final String USER_LOGOUT = "api/auth/logout";
     public static final String USER_DATA = "api/auth/user";
+    public static final String ORDER_CREATE = "api/orders";
+    public static final String ORDER_GET_ALL = "api/orders/all";
+    public static final String GET_INGREDIENTS = "api/ingredients";
 
     // сервисный метод печати информации в зависимости от статус-кода
     public static void printResponseInfo (Response response, int expectedStatusCode, String otherInfo) {
@@ -48,7 +51,7 @@ public class Utilities {
     }
 
     // сервисный метод проверки негативного ответа
-    public static void checkUserNegativeResponse (Response response, int statusCode, boolean successKeyValue, String messageKeyValue) {
+    public static void checkNegativeResponse(Response response, int statusCode, boolean successKeyValue, String messageKeyValue) {
         response.then()
                 .assertThat()
                 .statusCode(statusCode)

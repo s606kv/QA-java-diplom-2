@@ -1,3 +1,5 @@
+package userTests;
+
 import api.UserAPI;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
@@ -10,7 +12,7 @@ import service.User;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
-import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 public class UserCreateSameUserTest {
@@ -49,7 +51,7 @@ public class UserCreateSameUserTest {
         Response secondResponse = userAPI.userCreating(user);
 
         // проверили статус и тело ответа
-        checkUserNegativeResponse(secondResponse, SC_FORBIDDEN, false, "User already exists");
+        checkNegativeResponse(secondResponse, SC_FORBIDDEN, false, "User already exists");
     }
 
     @After /// Удаляем пользователя

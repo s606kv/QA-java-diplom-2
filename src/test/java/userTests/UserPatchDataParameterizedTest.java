@@ -1,3 +1,5 @@
+package userTests;
+
 import api.UserAPI;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
@@ -12,7 +14,7 @@ import service.User;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
@@ -128,7 +130,7 @@ public class UserPatchDataParameterizedTest {
 
         // проверка статуса и тела
         String messageKeyValue = "You should be authorised";
-        checkUserNegativeResponse(patchResponse, SC_UNAUTHORIZED, false, messageKeyValue);
+        checkNegativeResponse(patchResponse, SC_UNAUTHORIZED, false, messageKeyValue);
     }
 
     @After /// Удаляем пользователя

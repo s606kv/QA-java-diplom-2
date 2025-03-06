@@ -1,3 +1,5 @@
+package userTests;
+
 import api.UserAPI;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
@@ -12,7 +14,7 @@ import service.User;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
-import static service.Utilities.checkUserNegativeResponse;
+import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
@@ -125,7 +127,7 @@ public class UserLoginParameterizedTest {
 
         // проверяем статус и ответ
         String messageKeyValue = "email or password are incorrect";
-        checkUserNegativeResponse(secondResponse, status, successKeyValue, messageKeyValue);
+        checkNegativeResponse(secondResponse, status, successKeyValue, messageKeyValue);
     }
 
     @After /// Удаляем пользователя
