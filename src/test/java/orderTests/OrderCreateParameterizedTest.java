@@ -2,8 +2,6 @@ package orderTests;
 
 import api.OrderAPI;
 import api.UserAPI;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
@@ -17,7 +15,6 @@ import service.User;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -29,7 +26,6 @@ public class OrderCreateParameterizedTest {
     // поля класса
     private Order order;
     private static OrderAPI orderAPI = new OrderAPI();
-    private Gson gson = new Gson();
     private static Faker faker = new Faker();
     private List<String> ingredientsList;
 
@@ -79,7 +75,7 @@ public class OrderCreateParameterizedTest {
 
     @Test
     @DisplayName("Параметризованный тест создания заказа авторизованным пользователем.")
-    @Description("Проверяется возможность создать заказ авторизованному пользователю с существующим ингредиентом и несуществующим.")
+    @Description("Проверяется возможность создать заказ авторизованному пользователю.")
     public void orderCreateAuthorizedUserTest () {
         /// Создание пользователя и получение токена.
         // задали фейковые данные
@@ -145,6 +141,51 @@ public class OrderCreateParameterizedTest {
         userAPI.deleteUser(accessToken);
     }
 
+    @Test
+    @DisplayName("Параметризованный тест создания заказа без авторизации.")
+    @Description("Проверяется возможность создать заказ без авторизации.")
+    public void orderCreateNoAuthorizationTest () {
+        /// Формируется заказ
+        Response orderCreateWithoutUserResponse = orderAPI.orderCreateWithoutUser(order);
 
-
+        /// Блок проверок в зависимости от полученного статус-кода
+        // проверка ответа, если всё ok, а также получение списка заказов пользователя
+        if (orderCreateWithoutUserResponse.getStatusCode() == SC_OK) {
+            System.out.println("\uD83D\uDFE2 Заказ успешно создан.\n");
+            // проверяем ответ
+            orderCreateWithoutUserResponse.then().assertThat().statusCode(statusCode)
+                    .body("success", equalTo(true),
+                            "name", notNullValue(),
+                            "order.number", notNullValue()
+                    );
+            // запрос на получение списка всех заказов
+            Response getAllOrdersListResponse = orderAPI.getAllOrdersList();
+            // проверяем ответ, что он содержит айди заказа и ингредиенты
+            getAllOrdersListResponse.then().assertThat().statusCode(SC_OK)
+                    .body("success", equalTo(true),
+                            "orders[0]._id", notNullValue(),
+                            "orders[0].ingredients", notNullValue()
+                    );
+            // формируется читаемый json с выборкой заказов
+            orderAPI.getRequiredListOfOrdersFromDB(getAllOrdersListResponse, 0, 2);;
+        }
+        // проверка статуса и тела, если в запросе несуществующий ингредиент
+        else if (orderCreateWithoutUserResponse.getStatusCode() == SC_INTERNAL_SERVER_ERROR) {
+            System.out.println("\uD83D\uDD34 Ошибка сервера.\n");
+            orderCreateWithoutUserResponse.then()
+                    .assertThat()
+                    .statusCode(statusCode);
+        }
+        // проверка статуса и тела, если в запросе пусто
+        else if (orderCreateWithoutUserResponse.getStatusCode() == SC_BAD_REQUEST) {
+            String messageKeyValue = "Ingredient ids must be provided";
+            // проверили ответ
+            System.out.println("Проверяется статус и тело ответа.");
+            checkNegativeResponse(orderCreateWithoutUserResponse, statusCode, false, messageKeyValue);
+        }
+        // если иной код, то показывается сообщение
+        else {
+            System.out.println("⛔\uFE0F Неизвестный статус-код.");
+        }
+    }
 }

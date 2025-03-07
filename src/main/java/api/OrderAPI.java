@@ -7,6 +7,7 @@ import io.restassured.response.Response;
 import service.Order;
 import service.User;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.http.HttpStatus.*;
@@ -117,16 +118,24 @@ public class OrderAPI {
     }
 
     @Step ("Извлечение нужного количества заказов из списка всех заказов базы данных.")
-    public void getRequiredListOfOrdersFromDB (Response response, int fromThisIndex, int toThisIndex) {
-        System.out.println(String.format("-> Извлекаются список заказов от индекса %d до индекса %d из списка всех заказов в базе данных.", fromThisIndex, toThisIndex));
+    public void getRequiredListOfOrdersFromDB (Response response, int fromIndex, int toIndex) {
+        System.out.println(String.format("-> Извлекаются список заказов от индекса %d (включительно) до индекса %d (не включительно) из списка всех заказов в базе данных.", fromIndex, toIndex));
+
+        // проверка нижней границы
+        if (fromIndex<0) {
+            System.out.println("⚠\uFE0F Ошибка. Начальный индекс не может быть меньше нуля.");
+        }
 
         // приводим к красивому виду
-        Map<String, Object> allOrders = response.then().extract().body().path(String.format("orders[%d:%d]", fromThisIndex, toThisIndex));
+        List<Map<String, Object>> allOrders = response.getBody().path("orders");
+        List<Map<String, Object>> requiredList = allOrders.subList(fromIndex, toIndex);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String allOrdersPrettyJson = gson.toJson(allOrders);
+        String allOrdersPrettyJson = gson.toJson(requiredList);
+
+
 
         // выводим на экран
-        System.out.println(String.format("Запрошенный список:%n%s%n", allOrdersPrettyJson));
+        System.out.println(String.format("Запрошенный список заказов:%n%s%n", allOrdersPrettyJson));
     }
 
 }
