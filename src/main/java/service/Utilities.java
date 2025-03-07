@@ -50,12 +50,6 @@ public class Utilities {
         return extractedInfo;
     }
 
-    // сервисный метод получения айди ингредиента по его индексу
-    public static String getIngredientId (Response response, int index) {
-        String ingredientId = response.then().extract().body().path(String.format("data[%d]._id", index));
-        return ingredientId;
-    }
-
     // сервисный метод проверки негативного ответа
     public static void checkNegativeResponse(Response response, int statusCode, boolean successKeyValue, String messageKeyValue) {
         response.then()

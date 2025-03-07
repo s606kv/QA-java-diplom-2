@@ -37,7 +37,7 @@ public class OrderCreateParameterizedTest {
     private static String fakedIngredient = faker.lorem()
             .characters(24, 24, false, true);
     private static Response getIngredientsResponse = orderAPI.getIngredients();
-    private static String realIngredient = getIngredientId(getIngredientsResponse, 0);
+    private static String realIngredient = orderAPI.getIngredientId(getIngredientsResponse, 0);
 
     // поля для параметризации
     private final String testIngredientId;
@@ -62,26 +62,26 @@ public class OrderCreateParameterizedTest {
 
     @Before
     public void preconditions () {
-        /// Создание запроса.
+        /// Создание тела запроса.
         // создали список ингредиентов
-        System.out.println("\uD83D\uDFE2 Формируется json со списком ингредиентов.\n");
+        System.out.println("-> Формируется json со списком ингредиентов.");
         ingredientsList = new ArrayList<>();
         if (testIngredientId!=null) {
             ingredientsList.add(testIngredientId);
-            System.out.println(String.format("\uD83D\uDD35 В список добавляется ингредиент \"%s\".%n", testIngredientId));
+            System.out.println(String.format("\uD83D\uDD35 В список добавляется ингредиент \"%s\".", testIngredientId));
         } else {
-            System.out.println("\uD83D\uDD35 Передан пустой список ингредиентов.\n");
+            System.out.println("\uD83D\uDD35 Передан пустой список ингредиентов.");
         }
         // создали json со списком
         order = new Order(ingredientsList);
-        System.out.println("Запрос сформирован.\n");
+        System.out.println("✅ Запрос сформирован.\n");
     }
 
     @Test
     @DisplayName("Параметризованный тест создания заказа авторизованным пользователем.")
     @Description("Проверяется возможность создать заказ авторизованному пользователю с существующим ингредиентом и несуществующим.")
     public void orderCreateAuthorizedUserTest () {
-        ///  Создание пользователя и получение токена.
+        /// Создание пользователя и получение токена.
         // задали фейковые данные
         String userEmail = faker.internet().emailAddress();
         String userPassword = faker.internet().password();
@@ -96,10 +96,10 @@ public class OrderCreateParameterizedTest {
         // получили accessToken
         String accessToken = userAPI.getAccessToken(userCreatingResponse);
 
-        ///  Для созданного пользователя формируется заказ.
+        /// Для созданного пользователя формируется заказ.
         Response orderCreateForUserResponse = orderAPI.orderCreateForUser(order, user, accessToken);
 
-        ///  Блок проверок в зависимости от полученного статус-кода
+        /// Блок проверок в зависимости от полученного статус-кода
         // проверка ответа, если всё ok, а также получение списка заказов пользователя
         if (orderCreateForUserResponse.getStatusCode() == SC_OK) {
             System.out.println("\uD83D\uDFE2 Заказ для пользователя успешно создан.\n");
@@ -120,14 +120,11 @@ public class OrderCreateParameterizedTest {
                             "orders[0].ingredients", notNullValue()
                     );
             // формируется читаемый json с заказами пользователя
-            Map<String, Object> userOrderList = getUserOrderListResponse.getBody().as(Map.class);
-            gson = new GsonBuilder().setPrettyPrinting().create();
-            String prettyUserOrderList = gson.toJson(userOrderList);
-            System.out.println(prettyUserOrderList);
+            orderAPI.extractAllUserOrders(getUserOrderListResponse);
         }
         // проверка статуса и тела, если в запросе несуществующий ингредиент
         else if (orderCreateForUserResponse.getStatusCode() == SC_INTERNAL_SERVER_ERROR) {
-            System.out.println("\uD83D\uDD34 Ошибка сервера.");
+            System.out.println("\uD83D\uDD34 Ошибка сервера.\n");
             orderCreateForUserResponse.then()
                     .assertThat()
                     .statusCode(statusCode);

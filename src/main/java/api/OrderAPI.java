@@ -1,9 +1,13 @@
 package api;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import service.Order;
 import service.User;
+
+import java.util.Map;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -20,16 +24,24 @@ public class OrderAPI {
                 .when()
                 .get(GET_INGREDIENTS);
 
-        // проверка, что в ответе статус ОК и есть хотя бы один элемент с непустым id и именем
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
+
+        // дополнительная проверка того, что в ответе есть хотя бы один элемент с непустым id и именем
         response.then()
                 .assertThat()
-                .statusCode(SC_OK)
                 .body("success", equalTo(true),
                         "data[0]._id", notNullValue(),
                         "data[0].name", notNullValue()
                 );
 
         return response;
+    }
+
+    @Step ("Извлечение айди ингредиента по его индексу.")
+    public static String getIngredientId (Response response, int index) {
+        String ingredientId = response.then().extract().body().path(String.format("data[%d]._id", index));
+        return ingredientId;
     }
 
     @Step ("POST. Получение ответа на запрос создания заказа для существующего пользователя. Ручка api/orders.")
@@ -41,6 +53,9 @@ public class OrderAPI {
                 .body(order)
                 .when()
                 .post(ORDER_CREATE);
+
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
 
         return response;
     }
@@ -54,10 +69,26 @@ public class OrderAPI {
                 .when()
                 .get(ORDER_CREATE);
 
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
+
         return response;
     }
 
-    @Step ("POST. Получение ответа на запрос создания заказа без создания пользователя и проверка ответа. Ручка api/orders.")
+    @Step ("Извлечение списка заказов пользователя.")
+    public void extractAllUserOrders (Response response) {
+        System.out.println("-> Извлекается список заказов пользователя.");
+
+        // приводим к красивому виду
+        Map<String, Object> userOrderList = response.getBody().as(Map.class);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String prettyUserOrderList = gson.toJson(userOrderList);
+
+        // выводим на экран
+        System.out.println(String.format("Заказы пользователя:%n%s%n", prettyUserOrderList));
+    }
+
+    @Step ("POST. Получение ответа на запрос создания заказа без создания пользователя. Ручка api/orders.")
     public Response orderCreateWithoutUser (Order order) {
         System.out.println("-> Формируется заказ.");
 
@@ -66,24 +97,36 @@ public class OrderAPI {
                 .when()
                 .post(ORDER_CREATE);
 
-        /// ⛔️ Вынести проверку из метода, т.к. может быть невалидный запрос в теле заказа
-        // проверили статус ответа и тело
-        response.then()
-                .assertThat()
-                .statusCode(SC_OK)
-                .body("success", equalTo(true),
-                        "name", notNullValue(),
-                        "order.number", notNullValue()
-                );
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
 
         return response;
     }
 
-//    @Step ("GET. Получение ответа на запрос первых пяти заказов из списка всех заказов без авторизации и проверка ответа. Ручка api/orders/all.")
-//    public Response retAllOrdersList () {
-//        // Response response;
-//        // ⛔️⛔️⛔️ написать код
-//        // return response;
-//    }
+    @Step ("GET. Отправка запроса на получение списка всех заказов без авторизации. Ручка api/orders/all.")
+    public Response getAllOrdersList () {
+        System.out.println("-> Происходит отправка запроса на получение всех заказов в базе данных.");
+        Response response = REQUEST
+                .when()
+                .get(ORDER_GET_ALL);
+
+        // печатаем информацию о запросе
+        printResponseInfo(response, SC_OK, "");
+
+        return response;
+    }
+
+    @Step ("Извлечение нужного количества заказов из списка всех заказов базы данных.")
+    public void getRequiredListOfOrdersFromDB (Response response, int fromThisIndex, int toThisIndex) {
+        System.out.println(String.format("-> Извлекаются список заказов от индекса %d до индекса %d из списка всех заказов в базе данных.", fromThisIndex, toThisIndex));
+
+        // приводим к красивому виду
+        Map<String, Object> allOrders = response.then().extract().body().path(String.format("orders[%d:%d]", fromThisIndex, toThisIndex));
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String allOrdersPrettyJson = gson.toJson(allOrders);
+
+        // выводим на экран
+        System.out.println(String.format("Запрошенный список:%n%s%n", allOrdersPrettyJson));
+    }
 
 }

@@ -26,7 +26,7 @@ public class UserAPI {
         return response;
     }
 
-    @Step ("Получение accessToken после создания пользователя.")
+    @Step ("Извлечение accessToken после создания пользователя.")
     public String getAccessToken (Response response) {
         System.out.println("-> Получение accessToken.");
 
@@ -51,7 +51,7 @@ public class UserAPI {
         return cleanAccessToken;
     }
 
-    @Step ("Получение refreshToken после создания пользователя.")
+    @Step ("Извлечение refreshToken после создания пользователя.")
     public String getRefreshToken (Response response) {
         System.out.println("-> Получение refreshToken.");
 
