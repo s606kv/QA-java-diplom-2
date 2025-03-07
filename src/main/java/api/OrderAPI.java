@@ -132,8 +132,6 @@ public class OrderAPI {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String allOrdersPrettyJson = gson.toJson(requiredList);
 
-
-
         // выводим на экран
         System.out.println(String.format("Запрошенный список заказов:%n%s%n", allOrdersPrettyJson));
     }

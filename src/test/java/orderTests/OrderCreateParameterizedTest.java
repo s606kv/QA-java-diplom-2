@@ -57,7 +57,7 @@ public class OrderCreateParameterizedTest {
     }
 
     @Before
-    public void preconditions () {
+    public void setOrderJson () {
         /// Создание тела запроса.
         // создали список ингредиентов
         System.out.println("-> Формируется json со списком ингредиентов.");
