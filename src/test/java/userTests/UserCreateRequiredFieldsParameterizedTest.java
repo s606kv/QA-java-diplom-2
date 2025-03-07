@@ -18,7 +18,6 @@ import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
 public class UserCreateRequiredFieldsParameterizedTest {
-
     // фейковые данные
     private static Faker faker = new Faker();
     private static final String fakedEmail = faker.internet().emailAddress();

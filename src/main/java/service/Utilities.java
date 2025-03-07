@@ -50,6 +50,12 @@ public class Utilities {
         return extractedInfo;
     }
 
+    // сервисный метод получения айди ингредиента по его индексу
+    public static String getIngredientId (Response response, int index) {
+        String ingredientId = response.then().extract().body().path(String.format("data[%d]._id", index));
+        return ingredientId;
+    }
+
     // сервисный метод проверки негативного ответа
     public static void checkNegativeResponse(Response response, int statusCode, boolean successKeyValue, String messageKeyValue) {
         response.then()
@@ -59,7 +65,7 @@ public class Utilities {
                         "message", equalTo(messageKeyValue));
     }
 
-    // сервисный метод проверки позитивного ответа с токенами
+    // сервисный метод проверки позитивного ответа с юзером
     public static void checkUserPositiveResponse (Response response, User user, int statusCode, boolean successKeyValue) {
         response.then()
                 .assertThat()

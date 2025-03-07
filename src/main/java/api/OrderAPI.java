@@ -24,7 +24,8 @@ public class OrderAPI {
         response.then()
                 .assertThat()
                 .statusCode(SC_OK)
-                .body("data[0]._id", notNullValue(),
+                .body("success", equalTo(true),
+                        "data[0]._id", notNullValue(),
                         "data[0].name", notNullValue()
                 );
 
@@ -78,11 +79,11 @@ public class OrderAPI {
         return response;
     }
 
-    @Step ("GET. Получение ответа на запрос первых пяти заказов из списка всех заказов без авторизации и проверка ответа. Ручка api/orders/all.")
-    public Response retAllOrdersList () {
-        // Response response;
-        // ⛔️⛔️⛔️ написать код
-        // return response;
-    }
+//    @Step ("GET. Получение ответа на запрос первых пяти заказов из списка всех заказов без авторизации и проверка ответа. Ручка api/orders/all.")
+//    public Response retAllOrdersList () {
+//        // Response response;
+//        // ⛔️⛔️⛔️ написать код
+//        // return response;
+//    }
 
 }
