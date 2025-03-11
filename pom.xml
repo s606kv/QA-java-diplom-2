@@ -106,10 +106,10 @@
                         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
                     </argLine>
                     <properties>
-                        <property>
+                        <systemPropertyVariables>
                             <name>listener</name>
                             <value>io.qameta.allure.junit4.AllureJunit4</value>
-                        </property>
+                        </systemPropertyVariables>
                     </properties>
                     <systemProperties>
                         <property>
