@@ -18,7 +18,7 @@ import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
-public class UserLoginParameterizedTest {
+public class UserLoginNegativeParameterizedTest {
     // фейковые данные
     private static Faker faker = new Faker();
     private static String userEmail = faker.internet().emailAddress();
@@ -41,11 +41,11 @@ public class UserLoginParameterizedTest {
     private final int status;
     private final String testName;
     // конструктор
-    public UserLoginParameterizedTest (String email,
-                                       String password,
-                                       int status,
-                                       boolean successKeyValue,
-                                       String testName) {
+    public UserLoginNegativeParameterizedTest(String email,
+                                              String password,
+                                              int status,
+                                              boolean successKeyValue,
+                                              String testName) {
         this.email=email;
         this.password=password;
         this.status=status;
@@ -80,8 +80,7 @@ public class UserLoginParameterizedTest {
         // отобразили данные пользователя
         Response getUserDataResponse =  userAPI.getUserData(user, accessToken);
         // проверка статуса и тела ответа
-        getUserDataResponse.then()
-                .assertThat()
+        getUserDataResponse.then().assertThat()
                 .statusCode(SC_OK)
                 .body( "success", equalTo(true),
                         "user.email", equalTo(user.getEmail()),
@@ -105,7 +104,7 @@ public class UserLoginParameterizedTest {
     @Test
     @DisplayName("Параметризованный тест входа пользователя в систему с разными вариантами заполнения полей.")
     @Description("Проверяется возможность входа пользователя с верными данными и с неверным логином или паролем.")
-    public void userLoginTest () {
+    public void userLoginNegativeDataTest () {
 
         /// Определяем условия для проверок разных параметров.
         // если данные не менялись, то происходит только первый вход в систему из @before
