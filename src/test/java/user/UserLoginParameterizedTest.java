@@ -1,4 +1,4 @@
-package userTests;
+package user;
 
 import api.UserAPI;
 import io.qameta.allure.Description;
@@ -12,21 +12,20 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import service.User;
 
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
+import static org.apache.http.HttpStatus.*;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
 public class UserLoginParameterizedTest {
-
     // фейковые данные
     private static Faker faker = new Faker();
-    private static final String userEmail = faker.internet().emailAddress();
-    private static final String userPassword = faker.internet().password();
-    private static final String userName = faker.name().username();
-    private static final String newUserEmail = faker.internet().emailAddress();
-    private static final String newUserPassword = faker.internet().password();
+    private static String userEmail = faker.internet().emailAddress();
+    private static String userPassword = faker.internet().password();
+    private static String userName = faker.name().username();
+    private static String newUserEmail = faker.internet().emailAddress();
+    private static String newUserPassword = faker.internet().password();
 
     // переменные класса
     private UserAPI userAPI;
@@ -79,13 +78,28 @@ public class UserLoginParameterizedTest {
         accessToken = userAPI.getAccessToken(response);
         refreshToken = userAPI.getRefreshToken(response);
         // отобразили данные пользователя
-        userAPI.getUserData(user, accessToken);
+        Response getUserDataResponse =  userAPI.getUserData(user, accessToken);
+        // проверка статуса и тела ответа
+        getUserDataResponse.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body( "success", equalTo(true),
+                        "user.email", equalTo(user.getEmail()),
+                        "user.name", equalTo(user.getName())
+                );
         // вошли в систему, чтобы убедиться, что созданный пользователь имеет доступ
         response = userAPI.loginUser(user);
         // проверили статус и тело
         checkUserPositiveResponse(response, user, SC_OK, true);
         // вышли из системы
-        userAPI.logoutUser(refreshToken);
+        Response logoutUserResponse = userAPI.logoutUser(refreshToken);
+        // проверили статус и тело
+        logoutUserResponse.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body( "success", equalTo(true),
+                        "message", equalTo("Successful logout")
+                );
     }
 
     @Test
@@ -132,6 +146,14 @@ public class UserLoginParameterizedTest {
 
     @After /// Удаляем пользователя
     public void postconditions () {
-        userAPI.deleteUser(accessToken);
+        Response deleteUserResponse = userAPI.deleteUser(accessToken);
+        // проверка статуса и тела ответа
+        deleteUserResponse.then()
+                .assertThat()
+                .statusCode(SC_ACCEPTED)
+                .body(
+                        "success", equalTo(true),
+                        "message", equalTo("User successfully removed")
+                );
     }
 }

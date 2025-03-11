@@ -1,4 +1,4 @@
-package userTests;
+package user;
 
 import api.UserAPI;
 import io.qameta.allure.Description;
@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 import service.User;
 
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.*;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
@@ -37,7 +37,15 @@ public class UserCreateSameUserTest {
         // получили accessToken
         accessToken = userAPI.getAccessToken(response);
         // Отобразили данные пользователя
-        userAPI.getUserData(user, accessToken);
+        Response getUserDataResponse =  userAPI.getUserData(user, accessToken);
+        // проверка статуса и тела ответа
+        getUserDataResponse.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body( "success", equalTo(true),
+                        "user.email", equalTo(user.getEmail()),
+                        "user.name", equalTo(user.getName())
+                );
     }
 
     @Test
@@ -56,6 +64,14 @@ public class UserCreateSameUserTest {
 
     @After /// Удаляем пользователя
     public void postconditions () {
-        userAPI.deleteUser(accessToken);
+        Response deleteUserResponse = userAPI.deleteUser(accessToken);
+        // проверка статуса и тела ответа
+        deleteUserResponse.then()
+                .assertThat()
+                .statusCode(SC_ACCEPTED)
+                .body(
+                        "success", equalTo(true),
+                        "message", equalTo("User successfully removed")
+                );
     }
 }

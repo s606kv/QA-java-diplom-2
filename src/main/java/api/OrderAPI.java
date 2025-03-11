@@ -118,7 +118,7 @@ public class OrderAPI {
     }
 
     @Step ("Извлечение нужного количества заказов из списка всех заказов базы данных.")
-    public void getRequiredListOfOrdersFromDB (Response response, int fromIndex, int toIndex) {
+    public Response getRequiredListOfOrdersFromDB (Response response, int fromIndex, int toIndex) {
         System.out.println(String.format("-> Извлекаются список заказов от индекса %d (включительно) до индекса %d (не включительно) из списка всех заказов в базе данных.", fromIndex, toIndex));
 
         // проверка нижней границы
@@ -134,6 +134,8 @@ public class OrderAPI {
 
         // выводим на экран
         System.out.println(String.format("Запрошенный список заказов:%n%s%n", allOrdersPrettyJson));
+
+        return response;
     }
 
 }

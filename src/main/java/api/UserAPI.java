@@ -5,7 +5,6 @@ import io.restassured.response.Response;
 import service.User;
 
 import static org.apache.http.HttpStatus.*;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertNotNull;
 import static service.Utilities.*;
 
@@ -105,19 +104,11 @@ public class UserAPI {
         // печатаем информацию о запросе
         printResponseInfo(response, SC_OK, "");
 
-        // проверка статуса и тела ответа
-        response.then()
-                .assertThat()
-                .statusCode(SC_OK)
-                .body( "success", equalTo(true),
-                        "message", equalTo("Successful logout")
-                );
-
         return response;
     }
 
     @Step ("GET. Получение ответа на запрос данных пользователя, проверка статуса и ответа. Ручка api/auth/user.")
-    public void getUserData (User user, String accessToken) {
+    public Response getUserData (User user, String accessToken) {
         System.out.println("-> Получение пользовательских данных.");
 
         Response response = REQUEST
@@ -130,14 +121,7 @@ public class UserAPI {
         // печатаем информацию о запросе с данными пользователя
         printResponseInfo(response, SC_OK, otherInfo);
 
-        // проверка статуса и тела ответа
-        response.then()
-                .assertThat()
-                .statusCode(SC_OK)
-                .body( "success", equalTo(true),
-                        "user.email", equalTo(user.getEmail()),
-                        "user.name", equalTo(user.getName())
-                );
+        return response;
     }
 
     @Step ("PATCH. Получение ответа на запрос изменения данных пользователя. Ручка api/auth/user.")
@@ -160,7 +144,7 @@ public class UserAPI {
     }
 
     @Step ("DELETE. Удаления пользователя с проверкой статус-кода и тела ответа. Ручка api/auth/user.")
-    public void deleteUser (String accessToken) {
+    public Response deleteUser (String accessToken) {
         System.out.println("-> Удаляется пользователь.");
 
         Response response = REQUEST
@@ -171,14 +155,7 @@ public class UserAPI {
         // печатаем информацию о запросе
         printResponseInfo(response, SC_ACCEPTED, "");
 
-        // проверка статуса и тела ответа
-        response.then()
-                .assertThat()
-                .statusCode(SC_ACCEPTED)
-                .body(
-                        "success", equalTo(true),
-                        "message", equalTo("User successfully removed")
-                );
+        return response;
     }
 
 }

@@ -1,4 +1,4 @@
-package userTests;
+package user;
 
 import api.UserAPI;
 import io.qameta.allure.Description;
@@ -73,7 +73,15 @@ public class UserPatchDataParameterizedTest {
         // получили accessToken
         accessToken = userAPI.getAccessToken(response);
         // отобразили данные пользователя
-        userAPI.getUserData(user, accessToken);
+        Response getUserDataResponse =  userAPI.getUserData(user, accessToken);
+        // проверка статуса и тела ответа
+        getUserDataResponse.then()
+                .assertThat()
+                .statusCode(SC_OK)
+                .body( "success", equalTo(true),
+                        "user.email", equalTo(user.getEmail()),
+                        "user.name", equalTo(user.getName())
+                );
     }
 
     @Test
@@ -135,6 +143,14 @@ public class UserPatchDataParameterizedTest {
 
     @After /// Удаляем пользователя
     public void postconditions () {
-        userAPI.deleteUser(accessToken);
+        Response deleteUserResponse = userAPI.deleteUser(accessToken);
+        // проверка статуса и тела ответа
+        deleteUserResponse.then()
+                .assertThat()
+                .statusCode(SC_ACCEPTED)
+                .body(
+                        "success", equalTo(true),
+                        "message", equalTo("User successfully removed")
+                );
     }
 }
