@@ -14,7 +14,6 @@ import service.User;
 
 import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static service.Utilities.checkNegativeResponse;
 import static service.Utilities.checkUserPositiveResponse;
 
 @RunWith(Parameterized.class)
@@ -37,32 +36,23 @@ public class UserLoginNegativeParameterizedTest {
     // переменные параметров
     private final String email;
     private final String password;
-    private final boolean successKeyValue;
-    private final int status;
     private final String testName;
     // конструктор
-    public UserLoginNegativeParameterizedTest(String email,
-                                              String password,
-                                              int status,
-                                              boolean successKeyValue,
-                                              String testName) {
+    public UserLoginNegativeParameterizedTest(String email, String password, String testName) {
         this.email=email;
         this.password=password;
-        this.status=status;
-        this.successKeyValue=successKeyValue;
         this.testName=testName;
     }
 
     // параметры
-    @Parameterized.Parameters (name="{4}")
+    @Parameterized.Parameters (name="{2}")
     public static Object[][] data () {
         return new Object[][] {
-                {userEmail, userPassword, SC_OK, true, "Позитивный кейс логина с актуальными данными"},
-                {newUserEmail, userPassword, SC_UNAUTHORIZED, false, "Негативный кейс: неверный логин, верный пароль"},
-                {userEmail, newUserPassword, SC_UNAUTHORIZED, false, "Негативный кейс: верный логин, неверный пароль"},
-                {userEmail, "", SC_UNAUTHORIZED, false, "Негативный кейс: верный логин, пустой пароль"},
-                {"", userPassword, SC_UNAUTHORIZED, false, "Негативный кейс: пустой логин, верный пароль"},
-                {newUserEmail, newUserPassword, SC_UNAUTHORIZED, false, "Негативный кейс: неверный логин, неверный пароль"},
+                {newUserEmail, userPassword, "Неверный логин, верный пароль"},
+                {userEmail, newUserPassword, "Верный логин, неверный пароль"},
+                {userEmail, "", "Верный логин, пустой пароль"},
+                {"", userPassword, "Пустой логин, верный пароль"},
+                {newUserEmail, newUserPassword, "Неверный логин, неверный пароль"},
         };
     }
 
@@ -104,16 +94,8 @@ public class UserLoginNegativeParameterizedTest {
     @Test
     @DisplayName("Параметризованный тест входа пользователя в систему с разными вариантами заполнения полей.")
     @Description("Проверяется возможность входа пользователя с верными данными и с неверным логином или паролем.")
-    public void userLoginNegativeDataTest () {
-
-        /// Определяем условия для проверок разных параметров.
-        // если данные не менялись, то происходит только первый вход в систему из @before
-        if (email.equals(userEmail) && password.equals(userPassword)) {
-            System.out.println("\uD83D\uDD35 Данные не менялись. " +
-                    "Проверка повторного входа не требуется.\n");
-            return;
-        }
-
+    public void userLoginNegativeTest () {
+        /// Условия для проверок
         // заменили в запросе только емэйл
         if (!email.equals(userEmail) && password.equals(userPassword)) {
             user.setEmail(email);
@@ -135,12 +117,14 @@ public class UserLoginNegativeParameterizedTest {
                     "Новый password в запросе: %s%n", email, password));
         }
 
-        // проверяем повторный вход в систему с новыми данными
+        /// Проверяем повторный вход в систему с новыми данными
         Response secondResponse = userAPI.loginUser(user);
-
         // проверяем статус и ответ
-        String messageKeyValue = "email or password are incorrect";
-        checkNegativeResponse(secondResponse, status, successKeyValue, messageKeyValue);
+        secondResponse.then().assertThat()
+                .statusCode(SC_UNAUTHORIZED)
+                .body("success", equalTo(false),
+                        "message", equalTo("email or password are incorrect")
+                );
     }
 
     @After /// Удаляем пользователя

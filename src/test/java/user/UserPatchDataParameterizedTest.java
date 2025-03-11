@@ -36,30 +36,22 @@ public class UserPatchDataParameterizedTest {
     // переменные параметров
     private final String email;
     private final String name;
-    private final boolean successKeyValue;
-    private final int status;
     private final String testName;
     // конструктор
-    public UserPatchDataParameterizedTest (String email,
-                                       String name,
-                                       int status,
-                                       boolean successKeyValue,
-                                       String testName) {
+    public UserPatchDataParameterizedTest (String email, String name, String testName) {
         this.email=email;
         this.name=name;
-        this.status=status;
-        this.successKeyValue=successKeyValue;
         this.testName=testName;
     }
 
     // параметры
-    @Parameterized.Parameters (name="{4}")
+    @Parameterized.Parameters (name="{2}")
     public static Object[][] data () {
         return new Object[][] {
-                {userEmail, userName, SC_OK, true, "Позитивный кейс: данные не меняли"},
-                {newUserEmail, userName, SC_OK, true, "Позитивный кейс: меняем емэйл, не меняем имя"},
-                {userEmail, newUserName, SC_OK, true, "Позитивный кейс: не меняем емэйл, меняем имя"},
-                {newUserEmail, newUserName, SC_OK, true, "Позитивный кейс: меняются оба поля"}
+                {userEmail, userName, "Позитивный кейс: данные не меняли"},
+                {newUserEmail, userName, "Позитивный кейс: меняем емэйл, не меняем имя"},
+                {userEmail, newUserName, "Позитивный кейс: не меняем емэйл, меняем имя"},
+                {newUserEmail, newUserName, "Позитивный кейс: меняются оба поля"}
         };
     }
 
@@ -88,7 +80,6 @@ public class UserPatchDataParameterizedTest {
     @DisplayName("Параметризованный тест смены пользовательских данных для авторизованного пользователя.")
     @Description("Проверяется возможность смены данных авторизованного пользователя.")
     public void userAuthorizedPatchDataTest () {
-
          /// Определяем условия для проверок.
         // если данные не менялись
         if (email.equals(userEmail) && name.equals(userName)) {
@@ -121,8 +112,8 @@ public class UserPatchDataParameterizedTest {
         // проверяем, что в теле ответа поля email и name совпадают с переданными в патч-запросе
         patchResponse.then()
                 .assertThat()
-                .statusCode(status)
-                .body("success", equalTo(successKeyValue),
+                .statusCode(SC_OK)
+                .body("success", equalTo(true),
                         "user.email", equalTo(user.getEmail()),
                         "user.name", equalTo(user.getName())
                 );
