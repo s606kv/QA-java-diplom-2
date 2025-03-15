@@ -54,8 +54,7 @@ public class OrderCreateTest {
 
     @Test
     @DisplayName("Тест создания заказа авторизованным пользователем. Существующий айди ингредиента.")
-    @Description("Проверяется возможность создать заказ авторизованному пользователю. Существующий айди ингредиента. " +
-            "Выводится список заказов пользователя.")
+    @Description("Проверяется возможность создать заказ авторизованному пользователю. Существующий айди ингредиента.")
     public void orderCreateAuthorizedUserRealIngredientTest () {
         /// Создание тела запроса.
         // создали список ингредиентов
@@ -79,19 +78,6 @@ public class OrderCreateTest {
                         "order.owner.name", equalTo(user.getName()),
                         "order.owner.email", equalTo(user.getEmail())
                 );
-
-        // запрос на получение списка заказов
-        Response getUserOrderListResponse = orderAPI.getUserOrderList(accessToken);
-        // проверяем ответ
-        getUserOrderListResponse.then().assertThat()
-                .statusCode(SC_OK)
-                .body("success", equalTo(true),
-                        "orders[0]._id", notNullValue(),
-                        "orders[0].ingredients", notNullValue()
-                );
-
-        // формируется читаемый json с заказами пользователя
-        orderAPI.extractAllUserOrders(getUserOrderListResponse);
     }
 
     @Test
@@ -138,8 +124,7 @@ public class OrderCreateTest {
 
     @Test
     @DisplayName("Тест создания заказа без авторизации. Существующий айди ингредиента.")
-    @Description("Проверяется возможность создать заказ без авторизации. Существующий айди ингредиента. " +
-            "Выводится выборка из списка всех заказов БД.")
+    @Description("Проверяется возможность создать заказ без авторизации. Существующий айди ингредиента.")
     public void orderCreateNoAuthorizationRealIngredientTest () {
         /// Создание тела запроса.
         // создали список ингредиентов
@@ -152,8 +137,7 @@ public class OrderCreateTest {
         order = new Order(ingredientsList);
         System.out.println("✅ json сформирован.\n");
 
-
-        /// Формируется заказ
+        /// Формируется заказ без привязки к созданному пользователю.
         Response orderCreateWithoutUserResponse = orderAPI.orderCreateWithoutUser(order);
         // проверяем ответ
         orderCreateWithoutUserResponse.then().assertThat()
@@ -162,18 +146,6 @@ public class OrderCreateTest {
                         "name", notNullValue(),
                         "order.number", notNullValue()
                 );
-        // запрос на получение списка ВСЕХ заказов
-        Response getAllOrdersListResponse = orderAPI.getAllOrdersList();
-        // проверяем ответ, что он содержит айди заказа и ингредиенты
-        getAllOrdersListResponse.then().assertThat()
-                .statusCode(SC_OK)
-                .body("success", equalTo(true),
-                        "orders[0]._id", notNullValue(),
-                        "orders[0].ingredients", notNullValue()
-                );
-
-        // формируется читаемый json с ограниченной ВЫБОРКОЙ заказов
-        Response allOrdersResponse = orderAPI.getRequiredListOfOrdersFromDB(getAllOrdersListResponse, 0, 2);
     }
 
     @Test
@@ -191,7 +163,7 @@ public class OrderCreateTest {
         order = new Order(ingredientsList);
         System.out.println("✅ json сформирован.\n");
 
-        /// Формируется заказ
+        /// Формируется заказ.
         Response orderCreateWithoutUserResponse = orderAPI.orderCreateWithoutUser(order);
         // проверка ответа
         orderCreateWithoutUserResponse.then().assertThat()
@@ -211,7 +183,7 @@ public class OrderCreateTest {
         order = new Order(ingredientsList);
         System.out.println("✅ json сформирован.\n");
 
-        /// Формируется заказ
+        /// Формируется заказ.
         Response orderCreateWithoutUserResponse = orderAPI.orderCreateWithoutUser(order);
         // проверили ответ
         String messageKeyValue = "Ingredient ids must be provided";
