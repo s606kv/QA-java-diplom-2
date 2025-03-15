@@ -10,19 +10,18 @@ import org.junit.Before;
 import org.junit.Test;
 import service.User;
 
-import static org.apache.http.HttpStatus.SC_ACCEPTED;
-import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static service.Utilities.checkNegativeResponse;
 
-public class UserCreateAllFieldsPositiveTest {
-    // фейковые данные
-    private Faker faker = new Faker();
-    private String email = faker.internet().emailAddress();
-    private String password = faker.internet().password();
-    private String name = faker.name().username();
-
-    private Response response;
+public class UserCreateTest {
+    // поля класса
+    private Faker faker;
+    private String email;
+    private String password;
+    private String username;
+    private Response userCreatingResponse;
     private User user;
     private UserAPI userAPI;
     private String accessToken;
@@ -30,9 +29,16 @@ public class UserCreateAllFieldsPositiveTest {
     @Before
     public void setUp () {
         userAPI = new UserAPI();
+        // фейковые данные
+        faker = new Faker();
+        email = faker.internet().emailAddress();
+        password = faker.internet().password();
+        username = faker.name().username();
         // создаётся пользователь
-        user = new User(email, password, name);
-        response = userAPI.userCreating(user);
+        user = new User(email, password, username);
+        userCreatingResponse = userAPI.userCreating(user);
+        // получение токена
+        accessToken = userAPI.getAccessToken(userCreatingResponse);
     }
 
     @Test
@@ -40,7 +46,7 @@ public class UserCreateAllFieldsPositiveTest {
     @Description("Проверяется возможность создать пользователя с валидными данными во всех обязательных полях.")
     public void createUserWithAllRequiredFieldsTest () {
         /// Проверка статуса и тела ответа
-        response.then().assertThat()
+        userCreatingResponse.then().assertThat()
                 .statusCode(SC_OK)
                 .body("success", equalTo(true),
                         "user.email", equalTo(user.getEmail()),
@@ -48,9 +54,19 @@ public class UserCreateAllFieldsPositiveTest {
                         "accessToken", notNullValue(),
                         "refreshToken", notNullValue()
                 );
+    }
 
-        // получение токена
-        accessToken = userAPI.getAccessToken(response);
+    @Test
+    @DisplayName("Негативная проверка повторного создания пользователя, уже существующего в бд.")
+    @Description("Проверяется возможность создать пользователя, с теми же самыми данными, с которыми он уже был ранее создан.")
+    public void createSameUserTest () {
+        System.out.println("\uD83D\uDD35 Попытка создать пользователя с теми же данными.\n");
+
+        // отправляем повторный запрос с теми же данными
+        Response secondResponse = userAPI.userCreating(user);
+
+        // проверили статус и тело ответа
+        checkNegativeResponse(secondResponse, SC_FORBIDDEN, false, "User already exists");
     }
 
     @After /// Удаляем пользователя
